@@ -63,4 +63,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("androidx.compose.ui:ui:1.0.0")
+    implementation("androidx.compose.material:material:1.0.0")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+    implementation("androidx.navigation:navigation-compose:2.4.0-alpha01")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.13.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
 }
