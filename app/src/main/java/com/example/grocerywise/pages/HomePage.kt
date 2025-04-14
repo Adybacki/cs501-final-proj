@@ -1,7 +1,11 @@
 package com.example.grocerywise.pages
 
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
@@ -36,8 +44,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,9 +57,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.grocerywise.ApiClient
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.OfferItem
 import com.example.grocerywise.ProductLookupRequest
 import com.example.grocerywise.ProductLookupResponse
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -138,9 +151,19 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
         NavHost(navigationController, startDestination = "inventory", Modifier.padding(paddingValues)) {
             composable("inventory") { InventoryScreen(authViewModel) }
             composable("grocery_list") { GroceryListScreen(authViewModel) }
-            composable("add_item/{productName}") { backStackEntry ->
-                val productName = backStackEntry.arguments?.getString("productName")
-                AddItemScreen(navigationController, productName)
+            composable("add_item?name={name}&upc={upc}&prices={prices}&image={image}") { backStackEntry ->
+                val name = backStackEntry.arguments?.getString("name")
+                val upc = backStackEntry.arguments?.getString("upc")
+                val prices = backStackEntry.arguments?.getString("prices")?.split(",") ?: listOf()
+                val image = backStackEntry.arguments?.getString("image")
+
+                AddItemScreen(
+                    navController = navController,
+                    productName = name,
+                    productUpc = upc,
+                    productPrices = prices,
+                    productImageUri = image
+                )
             }
         }
     }
@@ -226,14 +249,31 @@ fun GroceryListScreen(authViewModel: AuthViewModel) {
 }
 
 @Composable
-fun AddItemScreen(navController: NavController, productName: String?) {
-    //Use an empty string as a fallback if productName is null
+fun AddItemScreen(navController: NavController, productName: String?, productUpc: String?, productPrices: List<String>?, productImageUri: String?) {
     val itemName = remember { mutableStateOf(productName ?: "") }
-    val quantity = remember { mutableStateOf("") }
+    val quantity = remember { mutableStateOf( "") }
+
+    val averagePrice = if (!productPrices.isNullOrEmpty()) {
+        productPrices.mapNotNull { it.toDoubleOrNull() }.average()
+    } else {
+        0.0
+    }
+    val priceEstimate = remember { mutableStateOf( averagePrice.toString()) }
+    val upcCode = remember { mutableStateOf(productUpc ?: "") }
+    val selectedImageUri = remember { mutableStateOf<Uri?>(Uri.parse(productImageUri)) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri.value = uri
+    }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Add Item", fontSize = 24.sp, fontWeight = FontWeight.Bold)
@@ -241,28 +281,74 @@ fun AddItemScreen(navController: NavController, productName: String?) {
         OutlinedTextField(
             value = itemName.value,
             onValueChange = { itemName.value = it },
-            label = { Text("Item Name") }
+            label = { Text("Item Name") },
+            modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = quantity.value,
             onValueChange = { quantity.value = it },
-            label = { Text("Quantity") }
+            label = { Text("Quantity") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = priceEstimate.value,
+            onValueChange = { priceEstimate.value = it },
+            label = { Text("Price Estimate") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+        )
 
-        Button(onClick = {
-            // Ensure that the name is not empty before allowing the user to proceed
-            if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty()) {
-                // TODO: Save the item to inventory or grocery list in state or db
-                navController.popBackStack()
+        OutlinedTextField(
+            value = upcCode.value,
+            onValueChange = { upcCode.value = it },
+            label = { Text("UPC Code") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Button(onClick = { imagePickerLauncher.launch("image/*") }) {
+            Text("Upload Photo")
+        }
+
+        selectedImageUri.value?.let { uri ->
+            Image(
+                painter = rememberAsyncImagePainter(uri),
+                contentDescription = "Selected Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(onClick = {
+                if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty()) {
+                    // TODO: Save to inventory
+                    navController.popBackStack()
+                }
+            }) {
+                Text("Add to Inventory")
             }
-        }) {
-            Text("Add Item")
+
+            Button(onClick = {
+                if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty()) {
+                    // TODO: Save to shopping list
+                    navController.popBackStack()
+                }
+            }) {
+                Text("Add to Shopping List")
+            }
         }
     }
 }
+
 
 
 
@@ -280,11 +366,13 @@ fun getProductDetails(upc: String, navController: NavController) {
                 val product = response.body()?.items?.firstOrNull()
 
                 if (product != null) {
-                    val productName = product.title
-                    val lowest_recorded_price = product.lowestRecordedPrice
-                    val image = product.images[0] //TODO: Add images into grocery lists also investigate using ViewModel?
-                    // Navigate to the AddItemScreen and pass the productName
-                    navController.navigate("add_item/${productName}")
+                    val encodedName = Uri.encode(product.title)
+                    val encodedUpc = Uri.encode(product.upc)
+                    val encodedPrices = Uri.encode(product.prices.joinToString(","))
+                    val encodedImage = Uri.encode(product.images.firstOrNull() ?: "")
+
+                    navController.navigate("add_item?name=$encodedName&upc=$encodedUpc&prices=$encodedPrices&image=$encodedImage")
+
                 }
             } else {
                 // Handle API error
