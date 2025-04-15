@@ -1,6 +1,6 @@
 package com.example.grocerywise.pages
 
-import android.util.Log
+
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,14 +28,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -56,6 +54,27 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.example.grocerywise.FirebaseDatabaseManager
+import com.example.grocerywise.InventoryItem
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 
 @Composable
 fun HomePage(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
@@ -162,30 +181,41 @@ fun BottomNavBar(navController: NavController) {
 }
 
 @Composable
-fun InventoryScreen(authViewModel: AuthViewModel) {
-    val groceries = remember { mutableStateListOf("Apples" to 3, "Bananas" to 5, "Milk" to 1) } // placeholder vals
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Inventory", fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
-        }
-        LazyColumn {
-            itemsIndexed(groceries) { index, item ->
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(item.first, fontSize = 20.sp)
-                    Row (verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { if (groceries[index].second > 0) groceries[index] = groceries[index].copy(second = groceries[index].second - 1) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
-                        }
-                        Text("${item.second}", fontSize = 20.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
-                        IconButton(onClick = { groceries[index] = groceries[index].copy(second = groceries[index].second + 1) }) {
-                            Icon(Icons.Default.Add, contentDescription = "Increase")
+fun InventoryScreen(authViewModel: com.example.grocerywise.AuthViewModel) {
+    // Get the current user's UID
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val userId = currentUser?.uid
+
+    val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
+
+    // Listen to changes in the inventory data in the database
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    inventoryItems.clear()
+                    // Iterate through each item under the node
+                    snapshot.children.forEach { dataSnap ->
+                        val item = dataSnap.getValue(InventoryItem::class.java)
+                        if (item != null) {
+                            inventoryItems.add(item)
                         }
                     }
                 }
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("InventoryScreen", "Data listener error: ${error.message}")
+                }
+            }
+            FirebaseDatabaseManager.listenToInventory(userId, listener)
+        }
+    }
+
+    // Render the UI based on inventoryItems (this example only displays a simple list; you can enhance it as needed)
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Text("Inventory", modifier = Modifier.padding(bottom = 8.dp))
+        LazyColumn {
+            items(inventoryItems) { item ->
+                Text(text = "${item.name} - Quantity: ${item.quantity}")
             }
         }
     }
@@ -224,36 +254,49 @@ fun GroceryListScreen(authViewModel: AuthViewModel) {
 
 @Composable
 fun AddItemScreen(navController: NavController, productName: String?) {
-    //Use an empty string as a fallback if productName is null
+    val context = LocalContext.current
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val userId = currentUser?.uid
+
     val itemName = remember { mutableStateOf(productName ?: "") }
     val quantity = remember { mutableStateOf("") }
+    // Additional inputs such as UPC, expirationDate or imageUrl can be added as needed
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Add Item", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
+        Text("Add Item", fontSize = 24.sp)
         OutlinedTextField(
             value = itemName.value,
             onValueChange = { itemName.value = it },
             label = { Text("Item Name") }
         )
-
         OutlinedTextField(
             value = quantity.value,
             onValueChange = { quantity.value = it },
             label = { Text("Quantity") }
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
         Button(onClick = {
-            // Ensure that the name is not empty before allowing the user to proceed
-            if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty()) {
-                // TODO: Save the item to inventory or grocery list in state or db
-                navController.popBackStack()
+            if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
+                // Create an InventoryItem object
+                val newItem = InventoryItem(
+                    name = itemName.value,
+                    quantity = quantity.value.toIntOrNull() ?: 0
+                    // If needed, add additional fields such as UPC, expirationDate, imageUrl
+                )
+                FirebaseDatabaseManager.addInventoryItem(userId, newItem) { success, exception ->
+                    if (success) {
+                        // Return to the inventory screen after successful write
+                        navController.popBackStack()
+                    } else {
+                        Toast.makeText(context, "Failed to add item: ${exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Please fill out all required fields", Toast.LENGTH_SHORT).show()
             }
         }) {
             Text("Add Item")
