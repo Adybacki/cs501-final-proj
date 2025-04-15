@@ -1,47 +1,28 @@
 package com.example.grocerywise.pages
 
+import android.annotation.SuppressLint
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -49,13 +30,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.grocerywise.ApiClient
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.BottomNavBar
 import com.example.grocerywise.ProductLookupRequest
 import com.example.grocerywise.ProductLookupResponse
+import com.example.grocerywise.models.GroceryItem
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -85,6 +66,36 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
 
     // State for showing menu
     val showMenu = remember { mutableStateOf(false) }
+
+    // Sample dummy data for grocery items
+    val groceryItems = remember {
+        listOf(
+            GroceryItem(
+                uid = "1",
+                name = "Apple",
+                quantity = 3,
+                estimatedPrice = 1.99,
+                isChecked = false,
+                imageUrl = "https://example.com/apple.jpg"
+            ),
+            GroceryItem(
+                uid = "2",
+                name = "Banana",
+                quantity = 5,
+                estimatedPrice = 0.99,
+                isChecked = false,
+                imageUrl = "https://example.com/banana.jpg"
+            ),
+            GroceryItem(
+                uid = "3",
+                name = "Orange",
+                quantity = 2,
+                estimatedPrice = 2.49,
+                isChecked = false,
+                imageUrl = "https://example.com/orange.jpg"
+            )
+        )
+    }
 
     Scaffold(
         bottomBar = { BottomNavBar(navigationController) },
@@ -137,134 +148,36 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
     ) { paddingValues ->
         NavHost(navigationController, startDestination = "inventory", Modifier.padding(paddingValues)) {
             composable("inventory") { InventoryScreen(authViewModel) }
-            composable("grocery_list") { GroceryListScreen(authViewModel) }
-            composable("add_item/{productName}") { backStackEntry ->
-                val productName = backStackEntry.arguments?.getString("productName")
-                AddItemScreen(navigationController, productName)
-            }
-        }
-    }
-}
-
-@Composable
-fun BottomNavBar(navController: NavController) {
-    BottomNavigation {
-        BottomNavigationItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Inventory") },
-            label = { Text("Inventory") },
-            selected = navController.currentDestination?.route == "inventory",
-            onClick = { navController.navigate("inventory") }
-        )
-        BottomNavigationItem(
-            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Grocery List") },
-            label = { Text("Grocery List") },
-            selected = navController.currentDestination?.route == "grocery_list",
-            onClick = { navController.navigate("grocery_list") }
-        )
-    }
-}
-
-@Composable
-fun InventoryScreen(authViewModel: AuthViewModel) {
-    val groceries = remember { mutableStateListOf("Apples" to 3, "Bananas" to 5, "Milk" to 1) } // placeholder vals
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Inventory", fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
-        }
-        LazyColumn {
-            itemsIndexed(groceries) { index, item ->
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(item.first, fontSize = 20.sp)
-                    Row (verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { if (groceries[index].second > 0) groceries[index] = groceries[index].copy(second = groceries[index].second - 1) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
-                        }
-                        Text("${item.second}", fontSize = 20.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
-                        IconButton(onClick = { groceries[index] = groceries[index].copy(second = groceries[index].second + 1) }) {
-                            Icon(Icons.Default.Add, contentDescription = "Increase")
-                        }
-                    }
+            composable("grocery_list") {  GroceryListScreen(
+                authViewModel = authViewModel,
+                groceryItems = groceryItems.toMutableStateList(),
+                onUpdateItem = { updatedItem ->
+                    // Update the item logic here
+                },
+                onDeleteItem = { uid ->
+                    // Delete item logic here
+                },
+                onAddCheckedToInventory = {
+                    // Add checked items to inventory logic here
                 }
+            ) }
+            composable("add_item?name={name}&upc={upc}&price={price}&image={image}") { backStackEntry ->
+                val name = backStackEntry.arguments?.getString("name")
+                val upc = backStackEntry.arguments?.getString("upc")
+                val price = backStackEntry.arguments?.getString("price")
+                val image = backStackEntry.arguments?.getString("image")
+
+                AddItemScreen(
+                    navController = navController,
+                    productName = name,
+                    productUpc = upc,
+                    productPrice = price,
+                    productImageUri = image
+                )
             }
         }
     }
 }
-
-@Composable
-fun GroceryListScreen(authViewModel: AuthViewModel) {
-    val groceriesList = remember { mutableStateListOf("Apples" to 3, "Bananas" to 5, "Milk" to 1) } // placeholder vals
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Grocery List", fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
-        }
-        LazyColumn {
-            itemsIndexed(groceriesList) { index, item ->
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(item.first, fontSize = 20.sp)
-                    Row (verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = {
-                            if (groceriesList[index].second > 0) groceriesList[index] = groceriesList[index].copy(second = groceriesList[index].second - 1) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
-                        }
-                        Text("${item.second}", fontSize = 20.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
-                        IconButton(onClick = { groceriesList[index] = groceriesList[index].copy(second = groceriesList[index].second + 1) }) {
-                            Icon(Icons.Default.Add, contentDescription = "Increase")
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AddItemScreen(navController: NavController, productName: String?) {
-    //Use an empty string as a fallback if productName is null
-    val itemName = remember { mutableStateOf(productName ?: "") }
-    val quantity = remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Add Item", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
-        OutlinedTextField(
-            value = itemName.value,
-            onValueChange = { itemName.value = it },
-            label = { Text("Item Name") }
-        )
-
-        OutlinedTextField(
-            value = quantity.value,
-            onValueChange = { quantity.value = it },
-            label = { Text("Quantity") }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = {
-            // Ensure that the name is not empty before allowing the user to proceed
-            if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty()) {
-                // TODO: Save the item to inventory or grocery list in state or db
-                navController.popBackStack()
-            }
-        }) {
-            Text("Add Item")
-        }
-    }
-}
-
-
 
 // Call API and handle response
 fun getProductDetails(upc: String, navController: NavController) {
@@ -272,6 +185,7 @@ fun getProductDetails(upc: String, navController: NavController) {
     Log.d("API Request", "Sending UPC: $request")
 
     ApiClient.apiService.lookupProduct(request).enqueue(object : Callback<ProductLookupResponse> {
+        @SuppressLint("DefaultLocale")
         override fun onResponse(
             call: Call<ProductLookupResponse>,
             response: Response<ProductLookupResponse>
@@ -280,11 +194,16 @@ fun getProductDetails(upc: String, navController: NavController) {
                 val product = response.body()?.items?.firstOrNull()
 
                 if (product != null) {
-                    val productName = product.title
-                    val lowest_recorded_price = product.lowestRecordedPrice
-                    val image = product.images[0] //TODO: Add images into grocery lists also investigate using ViewModel?
-                    // Navigate to the AddItemScreen and pass the productName
-                    navController.navigate("add_item/${productName}")
+                    val encodedName = Uri.encode(product.title)
+                    val encodedUpc = Uri.encode(product.upc)
+                    val encodedImage = Uri.encode(product.images.firstOrNull() ?: "")
+                    val prices = product.prices
+                    val averagePrice = prices.map { it.price }.average()
+                    val averageRoundedPrice = String.format("%.2f", averagePrice)
+                    val encodedPrice = Uri.encode(averageRoundedPrice)
+
+                    navController.navigate("add_item?name=$encodedName&upc=$encodedUpc&price=$encodedPrice&image=$encodedImage")
+
                 }
             } else {
                 // Handle API error

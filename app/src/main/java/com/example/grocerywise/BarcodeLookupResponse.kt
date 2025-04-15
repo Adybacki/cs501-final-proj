@@ -8,8 +8,11 @@ data class ProductLookupResponse(
 
 data class ProductItem(
     @Json(name="title") val title: String,
-    @Json(name="brand") val brand: String,
-    @Json(name="lowest_recorded_price") val lowestRecordedPrice: String,
-    @Json(name="description") val description: String,
+    @Json(name="upc") val upc: String,
+    @Json(name="offers") val prices: List<OfferItem>,
     @Json(name="images") val images: List<String>
+)
+
+data class OfferItem(
+    @Json(name="price") val price: Float
 )
