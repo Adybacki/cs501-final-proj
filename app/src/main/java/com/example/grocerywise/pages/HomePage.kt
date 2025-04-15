@@ -69,8 +69,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.grocerywise.FirebaseDatabaseManager
+
 import com.example.grocerywise.InventoryItem
+import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -181,20 +182,20 @@ fun BottomNavBar(navController: NavController) {
 }
 
 @Composable
-fun InventoryScreen(authViewModel: com.example.grocerywise.AuthViewModel) {
-    // Get the current user's UID
+fun InventoryScreen(authViewModel: AuthViewModel) {
+    // Get current user's UID.
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid
 
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
 
-    // Listen to changes in the inventory data in the database
+    // Listen to changes in the inventory data in the database.
     LaunchedEffect(userId) {
         if (userId != null) {
             val listener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     inventoryItems.clear()
-                    // Iterate through each item under the node
+                    // Iterate through each item under the inventory node.
                     snapshot.children.forEach { dataSnap ->
                         val item = dataSnap.getValue(InventoryItem::class.java)
                         if (item != null) {
@@ -210,16 +211,65 @@ fun InventoryScreen(authViewModel: com.example.grocerywise.AuthViewModel) {
         }
     }
 
-    // Render the UI based on inventoryItems (this example only displays a simple list; you can enhance it as needed)
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Inventory", modifier = Modifier.padding(bottom = 8.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Inventory",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
+        }
         LazyColumn {
-            items(inventoryItems) { item ->
-                Text(text = "${item.name} - Quantity: ${item.quantity}")
+            itemsIndexed(inventoryItems) { index, item ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = item.name, fontSize = 20.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = {
+                            if (item.quantity > 0) {
+                                val updatedItem = item.copy(quantity = item.quantity - 1)
+                                inventoryItems[index] = updatedItem
+                                if (userId != null) {
+                                    FirebaseDatabaseManager.updateInventoryItem(userId, updatedItem)
+                                }
+                            }
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
+                        }
+                        Text(
+                            text = "${item.quantity}",
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        IconButton(onClick = {
+                            val updatedItem = item.copy(quantity = item.quantity + 1)
+                            inventoryItems[index] = updatedItem
+                            if (userId != null) {
+                                FirebaseDatabaseManager.updateInventoryItem(userId, updatedItem)
+                            }
+                        }) {
+                            Icon(Icons.Default.Add, contentDescription = "Increase")
+                        }
+                    }
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun GroceryListScreen(authViewModel: AuthViewModel) {
@@ -251,52 +301,62 @@ fun GroceryListScreen(authViewModel: AuthViewModel) {
         }
     }
 }
-
 @Composable
 fun AddItemScreen(navController: NavController, productName: String?) {
+    // Use an empty string as a fallback if productName is null.
+    val itemName = remember { mutableStateOf(productName ?: "") }
+    val quantity = remember { mutableStateOf("") }
     val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid
-
-    val itemName = remember { mutableStateOf(productName ?: "") }
-    val quantity = remember { mutableStateOf("") }
-    // Additional inputs such as UPC, expirationDate or imageUrl can be added as needed
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Add Item", fontSize = 24.sp)
+        Text("Add Item", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+
         OutlinedTextField(
             value = itemName.value,
             onValueChange = { itemName.value = it },
             label = { Text("Item Name") }
         )
+
         OutlinedTextField(
             value = quantity.value,
             onValueChange = { quantity.value = it },
             label = { Text("Quantity") }
         )
+
         Spacer(modifier = Modifier.height(16.dp))
+
         Button(onClick = {
+            // Ensure that the name is not empty before proceeding.
             if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
-                // Create an InventoryItem object
+                // Create an InventoryItem object.
                 val newItem = InventoryItem(
                     name = itemName.value,
                     quantity = quantity.value.toIntOrNull() ?: 0
-                    // If needed, add additional fields such as UPC, expirationDate, imageUrl
+                    // Additional fields like UPC, expirationDate, or imageUrl can be added if needed.
                 )
                 FirebaseDatabaseManager.addInventoryItem(userId, newItem) { success, exception ->
                     if (success) {
-                        // Return to the inventory screen after successful write
                         navController.popBackStack()
                     } else {
-                        Toast.makeText(context, "Failed to add item: ${exception?.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Failed to add item: ${exception?.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } else {
-                Toast.makeText(context, "Please fill out all required fields", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "Please fill out all required fields",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }) {
             Text("Add Item")

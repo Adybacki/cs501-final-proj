@@ -1,18 +1,17 @@
-package com.example.grocerywise
+package com.example.grocerywise.data
 
 import com.example.grocerywise.InventoryItem
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
 object FirebaseDatabaseManager {
-    // Retrieve the FirebaseDatabase instance. The firebase_database_url is automatically read from values.xml.
     private val database = FirebaseDatabase.getInstance()
 
-    // Get a reference to the current user's inventory node using the user UID provided by FirebaseAuth.
+    // Get reference to the current user's inventory node.
     fun getUserInventoryRef(userId: String) =
         database.getReference("users").child(userId).child("inventory")
 
-    // Add an inventory item using push() to generate a unique key.
+    // Add an inventory item; uses push() to generate a unique key.
     fun addInventoryItem(
         userId: String,
         item: InventoryItem,
@@ -25,7 +24,14 @@ object FirebaseDatabaseManager {
         }
     }
 
-    // Add a grocery list item (similar approach).
+    // Update an existing inventory item (e.g., update quantity changes).
+    fun updateInventoryItem(userId: String, item: InventoryItem) {
+        if (item.id != null) {
+            getUserInventoryRef(userId).child(item.id!!).setValue(item)
+        }
+    }
+
+    // Add a grocery list item (similar implementation).
     fun addGroceryListItem(
         userId: String,
         item: com.example.grocerywise.GroceryListItem,
@@ -38,7 +44,7 @@ object FirebaseDatabaseManager {
         }
     }
 
-    // Listen for changes in the inventory data by adding a ValueEventListener.
+    // Listen to changes in the inventory data; attaches a ValueEventListener.
     fun listenToInventory(userId: String, listener: ValueEventListener) {
         getUserInventoryRef(userId).addValueEventListener(listener)
     }
