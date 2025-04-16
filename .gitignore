@@ -2,4 +2,4 @@
 
 
 *.iml .gradle/ build/ local.properties .DS_Store .idea/ /captures .externalNativeBuild .cxx /.vscode
-
+local.properties
