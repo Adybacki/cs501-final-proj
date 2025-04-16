@@ -20,7 +20,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -34,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.R
 
 val colors: List<String> =
     listOf(
@@ -67,7 +67,6 @@ val colors: List<String> =
         "#B19CD9",
     )
 
-
 fun hexToColor(hex: String): Color {
     val color = hex.removePrefix("#").toLong(16)
     return Color(color or 0xFF000000L)
@@ -100,7 +99,15 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Current Usage:", fontSize = 14.sp, color = Color(0xFF29b34e))
+            Text(
+                "Current Usage:",
+                fontSize = 14.sp,
+                color = Color(0xFF29b34e),
+                fontFamily =
+                    FontFamily(
+                        Font(resId = R.font.defaultfont),
+                    ),
+            )
 
             Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
                 percentage.forEachIndexed { index, (name, per) ->

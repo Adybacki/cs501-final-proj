@@ -42,7 +42,11 @@ import retrofit2.Callback
 import retrofit2.Response
 
 @Composable
-fun HomePage(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
+fun HomePage(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    authViewModel: AuthViewModel,
+) {
     val authState = authViewModel.authState.observeAsState()
 
     LaunchedEffect(authState.value) {
@@ -55,12 +59,14 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
     val context = LocalContext.current
     val navigationController = rememberNavController()
 
-    val options = GmsBarcodeScannerOptions.Builder()
-        .setBarcodeFormats(
-            Barcode.FORMAT_UPC_A,
-            Barcode.FORMAT_UPC_E)
-        .enableAutoZoom()
-        .build()
+    val options =
+        GmsBarcodeScannerOptions
+            .Builder()
+            .setBarcodeFormats(
+                Barcode.FORMAT_UPC_A,
+                Barcode.FORMAT_UPC_E,
+            ).enableAutoZoom()
+            .build()
 
     val scanner = GmsBarcodeScanning.getClient(context)
 
@@ -68,34 +74,35 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
     val showMenu = remember { mutableStateOf(false) }
 
     // Sample dummy data for grocery items
-    val groceryItems = remember {
-        listOf(
-            GroceryItem(
-                uid = "1",
-                name = "Apple",
-                quantity = 3,
-                estimatedPrice = 1.99,
-                isChecked = false,
-                imageUrl = "https://example.com/apple.jpg"
-            ),
-            GroceryItem(
-                uid = "2",
-                name = "Banana",
-                quantity = 5,
-                estimatedPrice = 0.99,
-                isChecked = false,
-                imageUrl = "https://example.com/banana.jpg"
-            ),
-            GroceryItem(
-                uid = "3",
-                name = "Orange",
-                quantity = 2,
-                estimatedPrice = 2.49,
-                isChecked = false,
-                imageUrl = "https://example.com/orange.jpg"
+    val groceryItems =
+        remember {
+            listOf(
+                GroceryItem(
+                    uid = "1",
+                    name = "Apple",
+                    quantity = 3,
+                    estimatedPrice = 1.99,
+                    isChecked = false,
+                    imageUrl = "https://example.com/apple.jpg",
+                ),
+                GroceryItem(
+                    uid = "2",
+                    name = "Banana",
+                    quantity = 5,
+                    estimatedPrice = 0.99,
+                    isChecked = false,
+                    imageUrl = "https://example.com/banana.jpg",
+                ),
+                GroceryItem(
+                    uid = "3",
+                    name = "Orange",
+                    quantity = 2,
+                    estimatedPrice = 2.49,
+                    isChecked = false,
+                    imageUrl = "https://example.com/orange.jpg",
+                ),
             )
-        )
-    }
+        }
 
     Scaffold(
         bottomBar = { BottomNavBar(navigationController) },
@@ -104,26 +111,25 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                 if (showMenu.value) {
                     Column(
                         modifier = Modifier.padding(bottom = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         FloatingActionButton(
                             onClick = {
                                 showMenu.value = false
-                                //Inside the barcode scanning success callback
-                                scanner.startScan()
+                                // Inside the barcode scanning success callback
+                                scanner
+                                    .startScan()
                                     .addOnSuccessListener { barcode ->
                                         Toast.makeText(context, "Scanned: ${barcode.rawValue}", Toast.LENGTH_LONG).show()
                                         barcode.rawValue?.let { upcCode ->
-                                            getProductDetails(upcCode, navigationController)  //Passing navController to getProductDetails
+                                            getProductDetails(upcCode, navigationController) // Passing navController to getProductDetails
                                         } ?: run {
                                             Toast.makeText(context, "Invalid barcode scanned", Toast.LENGTH_LONG).show()
                                         }
-                                    }
-                                    .addOnFailureListener { e ->
+                                    }.addOnFailureListener { e ->
                                         Toast.makeText(context, "Scan failed: ${e.message}", Toast.LENGTH_LONG).show()
                                     }
-
-                            }
+                            },
                         ) {
                             Icon(Icons.Default.List, contentDescription = "Scan Barcode")
                         }
@@ -131,7 +137,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                             onClick = {
                                 showMenu.value = false
                                 navigationController.navigate("add_item/")
-                            }
+                            },
                         ) {
                             Icon(Icons.Default.Add, contentDescription = "Add Manually")
                         }
@@ -140,27 +146,29 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                 FloatingActionButton(onClick = { showMenu.value = !showMenu.value }) {
                     Icon(
                         imageVector = if (showMenu.value) Icons.Default.Delete else Icons.Default.Add,
-                        contentDescription = if (showMenu.value) "Close Menu" else "Add Item"
+                        contentDescription = if (showMenu.value) "Close Menu" else "Add Item",
                     )
                 }
             }
-        }
+        },
     ) { paddingValues ->
         NavHost(navigationController, startDestination = "inventory", Modifier.padding(paddingValues)) {
             composable("inventory") { InventoryScreen(authViewModel) }
-            composable("grocery_list") {  GroceryListScreen(
-                authViewModel = authViewModel,
-                groceryItems = groceryItems.toMutableStateList(),
-                onUpdateItem = { updatedItem ->
-                    // Update the item logic here
-                },
-                onDeleteItem = { uid ->
-                    // Delete item logic here
-                },
-                onAddCheckedToInventory = {
-                    // Add checked items to inventory logic here
-                }
-            ) }
+            composable("grocery_list") {
+                GroceryListScreen(
+                    authViewModel = authViewModel,
+                    groceryItems = groceryItems.toMutableStateList(),
+                    onUpdateItem = { updatedItem ->
+                        // Update the item logic here
+                    },
+                    onDeleteItem = { uid ->
+                        // Delete item logic here
+                    },
+                    onAddCheckedToInventory = {
+                        // Add checked items to inventory logic here
+                    },
+                )
+            }
             composable("add_item?name={name}&upc={upc}&price={price}&image={image}") { backStackEntry ->
                 val name = backStackEntry.arguments?.getString("name")
                 val upc = backStackEntry.arguments?.getString("upc")
@@ -172,7 +180,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                     productName = name,
                     productUpc = upc,
                     productPrice = price,
-                    productImageUri = image
+                    productImageUri = image,
                 )
             }
         }
@@ -180,41 +188,48 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
 }
 
 // Call API and handle response
-fun getProductDetails(upc: String, navController: NavController) {
+fun getProductDetails(
+    upc: String,
+    navController: NavController,
+) {
     val request = ProductLookupRequest(upc)
     Log.d("API Request", "Sending UPC: $request")
 
-    ApiClient.apiService.lookupProduct(request).enqueue(object : Callback<ProductLookupResponse> {
-        @SuppressLint("DefaultLocale")
-        override fun onResponse(
-            call: Call<ProductLookupResponse>,
-            response: Response<ProductLookupResponse>
-        ) {
-            if (response.isSuccessful) {
-                val product = response.body()?.items?.firstOrNull()
+    ApiClient.apiService.lookupProduct(request).enqueue(
+        object : Callback<ProductLookupResponse> {
+            @SuppressLint("DefaultLocale")
+            override fun onResponse(
+                call: Call<ProductLookupResponse>,
+                response: Response<ProductLookupResponse>,
+            ) {
+                if (response.isSuccessful) {
+                    val product = response.body()?.items?.firstOrNull()
 
-                if (product != null) {
-                    val encodedName = Uri.encode(product.title)
-                    val encodedUpc = Uri.encode(product.upc)
-                    val encodedImage = Uri.encode(product.images.firstOrNull() ?: "")
-                    val prices = product.prices
-                    val averagePrice = prices.map { it.price }.average()
-                    val averageRoundedPrice = String.format("%.2f", averagePrice)
-                    val encodedPrice = Uri.encode(averageRoundedPrice)
+                    if (product != null) {
+                        val encodedName = Uri.encode(product.title)
+                        val encodedUpc = Uri.encode(product.upc)
+                        val encodedImage = Uri.encode(product.images.firstOrNull() ?: "")
+                        val prices = product.prices
+                        val averagePrice = prices.map { it.price }.average()
+                        val averageRoundedPrice = String.format("%.2f", averagePrice)
+                        val encodedPrice = Uri.encode(averageRoundedPrice)
 
-                    navController.navigate("add_item?name=$encodedName&upc=$encodedUpc&price=$encodedPrice&image=$encodedImage")
-
+                        navController.navigate("add_item?name=$encodedName&upc=$encodedUpc&price=$encodedPrice&image=$encodedImage")
+                    }
+                } else {
+                    // Handle API error
+                    Log.i("Error", "${response.errorBody()?.string()}")
+                    Log.e("API Error", "Error: ${response.code()} - ${response.message()}")
                 }
-            } else {
-                // Handle API error
-                Log.i("Error", "${response.errorBody()?.string()}")
-                Log.e("API Error", "Error: ${response.code()} - ${response.message()}")
             }
-        }
 
-        override fun onFailure(call: Call<ProductLookupResponse>, t: Throwable) {
-            // Handle failure
-            Log.e("Network Error", "Failure: ${t.message}")
-        }
-    })
+            override fun onFailure(
+                call: Call<ProductLookupResponse>,
+                t: Throwable,
+            ) {
+                // Handle failure
+                Log.e("Network Error", "Failure: ${t.message}")
+            }
+        },
+    )
 }
