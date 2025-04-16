@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -28,8 +29,11 @@ import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
 
 @Composable
-fun LoginPage(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
-
+fun LoginPage(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    authViewModel: AuthViewModel,
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -37,7 +41,7 @@ fun LoginPage(modifier: Modifier = Modifier, navController: NavController, authV
     val context = LocalContext.current
 
     LaunchedEffect(authState.value) {
-        when (authState.value){
+        when (authState.value) {
             is AuthState.Authenticated -> navController.navigate("home")
             is AuthState.Error -> Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
             else -> Unit
@@ -45,27 +49,27 @@ fun LoginPage(modifier: Modifier = Modifier, navController: NavController, authV
     }
 
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().padding(vertical = 30.dp, horizontal = 10.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(text = "Login to GroceryWise", fontSize = 30.sp)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-        OutlinedTextField(value = email, onValueChange = {email = it}, label = {
+        OutlinedTextField(value = email, onValueChange = { email = it }, label = {
             Text("Email")
         })
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(value = password, onValueChange = {password = it}, label = {
+        OutlinedTextField(value = password, onValueChange = { password = it }, label = {
             Text("Password")
         }, visualTransformation = PasswordVisualTransformation())
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Button( onClick = {
+        Button(onClick = {
             authViewModel.login(email, password)
         }, enabled = authState.value != AuthState.Loading) {
             Text("Login")
@@ -75,6 +79,6 @@ fun LoginPage(modifier: Modifier = Modifier, navController: NavController, authV
 
         TextButton(onClick = {
             navController.navigate("signup")
-        }) { Text("Don't have an account? Sign up here")}
+        }) { Text("Don't have an account? Sign up here") }
     }
 }
