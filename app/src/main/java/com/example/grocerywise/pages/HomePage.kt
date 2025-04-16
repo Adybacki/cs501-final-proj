@@ -27,6 +27,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.grocerywise.ApiClient
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
@@ -130,7 +131,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                         FloatingActionButton(
                             onClick = {
                                 showMenu.value = false
-                                navigationController.navigate("add_item/")
+                                navigationController.navigate("add_item")
                             }
                         ) {
                             Icon(Icons.Default.Add, contentDescription = "Add Manually")
@@ -161,20 +162,36 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                     // Add checked items to inventory logic here
                 }
             ) }
-            composable("add_item?name={name}&upc={upc}&price={price}&image={image}") { backStackEntry ->
-                val name = backStackEntry.arguments?.getString("name")
-                val upc = backStackEntry.arguments?.getString("upc")
-                val price = backStackEntry.arguments?.getString("price")
-                val image = backStackEntry.arguments?.getString("image")
-
+            composable(
+                route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",
+                arguments = listOf(
+                    navArgument("productName") {
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("productUpc") {
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("productPrice") {
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("productImageUri") {
+                        nullable = true
+                        defaultValue = null
+                    },
+                )
+            ) { backStackEntry ->
                 AddItemScreen(
-                    navController = navController,
-                    productName = name,
-                    productUpc = upc,
-                    productPrice = price,
-                    productImageUri = image
+                    navController,
+                    productName = backStackEntry.arguments?.getString("productName"),
+                    productUpc = backStackEntry.arguments?.getString("productUpc"),
+                    productPrice = backStackEntry.arguments?.getString("productPrice"),
+                    productImageUri = backStackEntry.arguments?.getString("productImageUri"),
                 )
             }
+
         }
     }
 }
@@ -202,7 +219,7 @@ fun getProductDetails(upc: String, navController: NavController) {
                     val averageRoundedPrice = String.format("%.2f", averagePrice)
                     val encodedPrice = Uri.encode(averageRoundedPrice)
 
-                    navController.navigate("add_item?name=$encodedName&upc=$encodedUpc&price=$encodedPrice&image=$encodedImage")
+                    navController.navigate("add_item?productName=$encodedName&productUpc=$encodedUpc&productPrice=$encodedPrice&productImageUri=$encodedImage")
 
                 }
             } else {

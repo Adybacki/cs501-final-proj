@@ -42,7 +42,9 @@ fun AddItemScreen(navController: NavController, productName: String?, productUpc
     Log.d("PRODUCT PRICE AVG", productPrice.toString())
     val priceEstimate = remember { mutableStateOf( productPrice ?: "") }
     val upcCode = remember { mutableStateOf(productUpc ?: "") }
-    val selectedImageUri = remember { mutableStateOf<Uri?>(Uri.parse(productImageUri)) }
+    val selectedImageUri = remember {
+        mutableStateOf<Uri?>(productImageUri?.let { Uri.parse(it) })
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
