@@ -1,5 +1,6 @@
 package com.example.grocerywise.pages
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -26,15 +28,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun GroceryListScreen(
     authViewModel: AuthViewModel,
-    groceryItems: SnapshotStateList<GroceryItem>,
     onUpdateItem: (GroceryItem) -> Unit,
     onDeleteItem: (String) -> Unit,
     onAddCheckedToInventory: () -> Unit
@@ -46,6 +51,30 @@ fun GroceryListScreen(
 
     // List to store inventory items from Firebase.
     val groceryItems = remember { mutableStateListOf<GroceryItem>() }
+
+    // Listen for changes in the inventory data from the database.
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            val listener =
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        groceryItems.clear()
+                        // Iterate through each child in the inventory node.
+                        snapshot.children.forEach { dataSnap ->
+                            val item = dataSnap.getValue(GroceryItem::class.java)
+                            if (item != null) {
+                                groceryItems.add(item)
+                            }
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e("GroceryListScreen", "Data listener error: ${error.message}")
+                    }
+                }
+            FirebaseDatabaseManager.listenToGroceryList(userId, listener)
+        }
+    }
 
     val totalCost = groceryItems
         .sumOf { it.estimatedPrice * it.quantity }

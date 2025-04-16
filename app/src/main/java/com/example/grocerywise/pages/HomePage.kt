@@ -68,36 +68,6 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
     // State for showing menu
     val showMenu = remember { mutableStateOf(false) }
 
-    // Sample dummy data for grocery items
-    val groceryItems = remember {
-        listOf(
-            GroceryItem(
-                id = "1",
-                name = "Apple",
-                quantity = 3,
-                estimatedPrice = 1.99,
-                isChecked = false,
-                imageUrl = "https://example.com/apple.jpg"
-            ),
-            GroceryItem(
-                id = "2",
-                name = "Banana",
-                quantity = 5,
-                estimatedPrice = 0.99,
-                isChecked = false,
-                imageUrl = "https://example.com/banana.jpg"
-            ),
-            GroceryItem(
-                id = "3",
-                name = "Orange",
-                quantity = 2,
-                estimatedPrice = 2.49,
-                isChecked = false,
-                imageUrl = "https://example.com/orange.jpg"
-            )
-        )
-    }
-
     Scaffold(
         bottomBar = { BottomNavBar(navigationController) },
         floatingActionButton = {
@@ -151,7 +121,6 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
             composable("inventory") { InventoryScreen(authViewModel) }
             composable("grocery_list") {  GroceryListScreen(
                 authViewModel = authViewModel,
-                groceryItems = groceryItems.toMutableStateList(),
                 onUpdateItem = { updatedItem ->
                     // Update the item logic here
                 },
