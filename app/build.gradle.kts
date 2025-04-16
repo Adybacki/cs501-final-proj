@@ -16,6 +16,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "DB", "\"https://grocerywise-cs501-default-rtdb.firebaseio.com/\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
