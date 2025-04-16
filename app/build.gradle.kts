@@ -15,16 +15,17 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        buildConfigField( "String", "DB", "\"https://grocerywise-cs501-default-rtdb.firebaseio.com/\"")
+        buildConfigField("String", "DB", "\"https://grocerywise-cs501-default-rtdb.firebaseio.com/\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-                     isMinifyEnabled = false
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -37,7 +38,7 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig =  true
+        buildConfig = true
     }
 }
 
