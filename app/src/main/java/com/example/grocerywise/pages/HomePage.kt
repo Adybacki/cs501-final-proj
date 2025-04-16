@@ -72,7 +72,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
     val groceryItems = remember {
         listOf(
             GroceryItem(
-                uid = "1",
+                id = "1",
                 name = "Apple",
                 quantity = 3,
                 estimatedPrice = 1.99,
@@ -80,7 +80,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                 imageUrl = "https://example.com/apple.jpg"
             ),
             GroceryItem(
-                uid = "2",
+                id = "2",
                 name = "Banana",
                 quantity = 5,
                 estimatedPrice = 0.99,
@@ -88,7 +88,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                 imageUrl = "https://example.com/banana.jpg"
             ),
             GroceryItem(
-                uid = "3",
+                id = "3",
                 name = "Orange",
                 quantity = 2,
                 estimatedPrice = 2.49,

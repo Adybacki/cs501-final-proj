@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -25,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.models.GroceryItem
+import com.example.grocerywise.models.InventoryItem
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -35,6 +39,14 @@ fun GroceryListScreen(
     onDeleteItem: (String) -> Unit,
     onAddCheckedToInventory: () -> Unit
 ) {
+
+    // Get the current user's UID.
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val userId = currentUser?.uid
+
+    // List to store inventory items from Firebase.
+    val groceryItems = remember { mutableStateListOf<GroceryItem>() }
+
     val totalCost = groceryItems
         .sumOf { it.estimatedPrice * it.quantity }
 
@@ -48,11 +60,11 @@ fun GroceryListScreen(
         }
 
         LazyColumn(modifier = Modifier.weight(1f)) {
-            items(items = groceryItems, key = { it.uid }) { item ->
+            items(items = groceryItems, key = { it.id!! }) { item ->
                 val dismissState = rememberDismissState(
                     confirmStateChange = { state ->
                         if (state == DismissValue.DismissedToStart) {
-                            onDeleteItem(item.uid)
+                            onDeleteItem(item.id!!)
                             true
                         } else false
                     }
