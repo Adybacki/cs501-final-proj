@@ -154,8 +154,8 @@ fun InventoryScreen(
         }
     // Shuffle colors for visual variety.
     val shuffledColors = remember { colors.shuffled() }
-    when (info) {
-        WindowWidthSizeClass.COMPACT -> {
+//    when (info) {
+//        WindowWidthSizeClass.COMPACT -> {
             Column(
                 modifier =
                     Modifier
@@ -392,159 +392,159 @@ fun InventoryScreen(
                             }
                         },
                     )
-                }
-            }
+                //}
+           // }
         }
 
-        WindowWidthSizeClass.EXPANDED -> {
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxSize(1f)
-                        .padding(vertical = 5.dp, horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(0.8f).fillMaxHeight(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        "Inventory",
-                        fontSize = 30.sp,
-                        fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
-                        fontWeight = FontWeight.W600,
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            "Current Usage:",
-                            fontSize = 18.sp,
-                            fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
-                            color = Color(0xFF29b34e),
-                        )
-                        Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
-                            percentageList.forEachIndexed { index, (name, per) ->
-                                val color = hexToColor(shuffledColors[index % shuffledColors.size])
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxHeight()
-                                            .fillMaxWidth(per)
-                                            .background(color = color),
-                                ) {
-                                }
-                            }
-                        }
-                    }
-// lazy Column for lists
-                    @OptIn(ExperimentalMaterialApi::class)
-                    LazyColumn {
-                        itemsIndexed(inventoryItems, key = { _, item -> item.id!! }) { index, item ->
-                            // 1) remember a SwipeToDismiss state
-                            val dismissState =
-                                rememberDismissState(
-                                    confirmStateChange = { state ->
-                                        if (state == DismissValue.DismissedToStart) {
-                                            // 1. Remove locally
-                                            inventoryItems.remove(item)
-                                            // 2. Remove remotely
-                                            userId?.let { uid ->
-                                                FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                    if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
-                                                }
-                                            }
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    },
-                                )
-
-                            SwipeToDismiss(
-                                state = dismissState,
-                                directions = setOf(DismissDirection.EndToStart),
-                                background = { /* unchanged */ },
-                                dismissContent = {
-                                    Row(
-                                        Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        // … your AsyncImage + Text …
-
-                                        // 2) “–” button:
-                                        IconButton(onClick = {
-                                            if (item.quantity > 1) {
-                                                val updated = item.copy(quantity = item.quantity - 1)
-                                                inventoryItems[index] = updated
-                                                userId?.let { uid ->
-                                                    FirebaseDatabaseManager.updateInventoryItem(uid, updated)
-                                                }
-                                            } else {
-                                                // 1) Remove locally first (so immediately disappears from UI)
-                                                inventoryItems.remove(item)
-
-                                                // 2) Tell Firebase to delete
-                                                userId?.let { uid ->
-                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                        if (!success) {
-                                                            Log.e("InventoryScreen", "Failed to remove ${item.id}, rolling back")
-                                                            // rollback so the user sees it again
-                                                            inventoryItems.add(index, item)
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
-                                        }
-
-                                        Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
-
-                                        IconButton(onClick = {
-                                            val updated = item.copy(quantity = item.quantity + 1)
-                                            inventoryItems[index] = updated
-                                            userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
-                                        }) {
-                                            Icon(Icons.Default.Add, contentDescription = "Increase")
-                                        }
-                                    }
-                                },
-                            )
-                        }
-                    }
-                }
-
-                Column(
-                    modifier = Modifier.fillMaxWidth(1f).fillMaxHeight().padding(top = 16.dp),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    FloatingActionButton(
-                        onClick = {
-                            authViewModel.signout()
-                        },
-                        containerColor = Color.Red,
-                        modifier = Modifier.fillMaxWidth(0.4f),
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(24.dp),
-                            painter = painterResource(id = R.drawable.signout),
-                            contentDescription = "signout",
-                        )
-                    }
-                }
-            }
-        }
+//        WindowWidthSizeClass.EXPANDED -> {
+//            Row(
+//                modifier =
+//                    Modifier
+//                        .fillMaxSize(1f)
+//                        .padding(vertical = 5.dp, horizontal = 20.dp),
+//                horizontalArrangement = Arrangement.spacedBy(10.dp),
+//                verticalAlignment = Alignment.CenterVertically,
+//            ) {
+//                Column(
+//                    modifier = Modifier.fillMaxWidth(0.8f).fillMaxHeight(),
+//                    verticalArrangement = Arrangement.Center,
+//                    horizontalAlignment = Alignment.CenterHorizontally,
+//                ) {
+//                    Text(
+//                        "Inventory",
+//                        fontSize = 30.sp,
+//                        fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+//                        fontWeight = FontWeight.W600,
+//                    )
+//                    Spacer(modifier = Modifier.height(10.dp))
+//
+//                    Row(
+//                        modifier =
+//                            Modifier
+//                                .fillMaxWidth()
+//                                .height(20.dp),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween,
+//                    ) {
+//                        Text(
+//                            "Current Usage:",
+//                            fontSize = 18.sp,
+//                            fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+//                            color = Color(0xFF29b34e),
+//                        )
+//                        Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
+//                            percentageList.forEachIndexed { index, (name, per) ->
+//                                val color = hexToColor(shuffledColors[index % shuffledColors.size])
+//                                Box(
+//                                    modifier =
+//                                        Modifier
+//                                            .fillMaxHeight()
+//                                            .fillMaxWidth(per)
+//                                            .background(color = color),
+//                                ) {
+//                                }
+//                            }
+//                        }
+//                    }
+//// lazy Column for lists
+//                    @OptIn(ExperimentalMaterialApi::class)
+//                    LazyColumn {
+//                        itemsIndexed(inventoryItems, key = { _, item -> item.id!! }) { index, item ->
+//                            // 1) remember a SwipeToDismiss state
+//                            val dismissState =
+//                                rememberDismissState(
+//                                    confirmStateChange = { state ->
+//                                        if (state == DismissValue.DismissedToStart) {
+//                                            // 1. Remove locally
+//                                            inventoryItems.remove(item)
+//                                            // 2. Remove remotely
+//                                            userId?.let { uid ->
+//                                                FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+//                                                    if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
+//                                                }
+//                                            }
+//                                            true
+//                                        } else {
+//                                            false
+//                                        }
+//                                    },
+//                                )
+//
+//                            SwipeToDismiss(
+//                                state = dismissState,
+//                                directions = setOf(DismissDirection.EndToStart),
+//                                background = { /* unchanged */ },
+//                                dismissContent = {
+//                                    Row(
+//                                        Modifier.fillMaxWidth(),
+//                                        horizontalArrangement = Arrangement.SpaceBetween,
+//                                        verticalAlignment = Alignment.CenterVertically,
+//                                    ) {
+//                                        // … your AsyncImage + Text …
+//
+//                                        // 2) “–” button:
+//                                        IconButton(onClick = {
+//                                            if (item.quantity > 1) {
+//                                                val updated = item.copy(quantity = item.quantity - 1)
+//                                                inventoryItems[index] = updated
+//                                                userId?.let { uid ->
+//                                                    FirebaseDatabaseManager.updateInventoryItem(uid, updated)
+//                                                }
+//                                            } else {
+//                                                // 1) Remove locally first (so immediately disappears from UI)
+//                                                inventoryItems.remove(item)
+//
+//                                                // 2) Tell Firebase to delete
+//                                                userId?.let { uid ->
+//                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+//                                                        if (!success) {
+//                                                            Log.e("InventoryScreen", "Failed to remove ${item.id}, rolling back")
+//                                                            // rollback so the user sees it again
+//                                                            inventoryItems.add(index, item)
+//                                                        }
+//                                                    }
+//                                                }
+//                                            }
+//                                        }) {
+//                                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
+//                                        }
+//
+//                                        Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
+//
+//                                        IconButton(onClick = {
+//                                            val updated = item.copy(quantity = item.quantity + 1)
+//                                            inventoryItems[index] = updated
+//                                            userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
+//                                        }) {
+//                                            Icon(Icons.Default.Add, contentDescription = "Increase")
+//                                        }
+//                                    }
+//                                },
+//                            )
+//                        }
+//                    }
+//                }
+//
+//                Column(
+//                    modifier = Modifier.fillMaxWidth(1f).fillMaxHeight().padding(top = 16.dp),
+//                    verticalArrangement = Arrangement.Top,
+//                    horizontalAlignment = Alignment.CenterHorizontally,
+//                ) {
+//                    FloatingActionButton(
+//                        onClick = {
+//                            authViewModel.signout()
+//                        },
+//                        containerColor = Color.Red,
+//                        modifier = Modifier.fillMaxWidth(0.4f),
+//                    ) {
+//                        Icon(
+//                            modifier = Modifier.size(24.dp),
+//                            painter = painterResource(id = R.drawable.signout),
+//                            contentDescription = "signout",
+//                        )
+//                    }
+//                }
+//            }
+//        }
     }
 }
