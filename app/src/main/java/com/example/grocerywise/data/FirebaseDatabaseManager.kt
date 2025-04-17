@@ -35,6 +35,17 @@ object FirebaseDatabaseManager {
         }
     }
 
+    fun removeInventoryItem(
+        userId: String,
+        itemId: String,
+        onComplete: ((Boolean, Exception?) -> Unit)? = null,
+    ) {
+        getUserInventoryRef(userId).child(itemId).removeValue()
+            .addOnCompleteListener { task ->
+                onComplete?.invoke(task.isSuccessful, task.exception)
+            }
+    }
+
     // Listen to changes in the inventory data; attaches a ValueEventListener.
     fun listenToInventory(
         userId: String,
@@ -64,6 +75,17 @@ object FirebaseDatabaseManager {
         item.id?.let {
             getUserGroceryListRef(userId).child(it).setValue(item)
         }
+    }
+
+    fun removeGroceryListItem(
+        userId: String,
+        itemId: String,
+        onComplete: ((Boolean, Exception?) -> Unit)? = null,
+    ) {
+        getUserGroceryListRef(userId).child(itemId).removeValue()
+            .addOnCompleteListener { task ->
+                onComplete?.invoke(task.isSuccessful, task.exception)
+            }
     }
 
     fun listenToGroceryList(

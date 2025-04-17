@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.grocerywise.data.FirebaseDatabaseManager
+import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
 import com.google.firebase.auth.FirebaseAuth
 
@@ -186,9 +187,28 @@ fun AddItemScreen(
 
             Button(
                 onClick = {
-                    if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty()) {
-                        // TODO: Save to shopping list.
-                        navController.popBackStack()
+                    if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
+                        // Create an GroceryListItem object in db
+                        val newItem = (
+                            GroceryItem(
+                                name = itemName.value,
+                                quantity = quantity.value.toIntOrNull() ?: 0,
+                                upc = upcCode.value,
+                                imageUrl = selectedImageUri.value?.toString(),
+                                estimatedPrice = priceEstimate.value.toDouble(),
+                            ))
+                        FirebaseDatabaseManager.addGroceryListItem(userId, newItem) { success, exception ->
+                            if (success) {
+                                navController.popBackStack()
+                            } else {
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Failed to add item: ${exception?.message}",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                            }
+                        }
                     }
                 },
                 enabled = itemName.value.isNotEmpty() && quantity.value.isNotEmpty(),

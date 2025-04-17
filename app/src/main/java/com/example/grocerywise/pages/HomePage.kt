@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -68,36 +70,6 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
     // State for showing menu
     val showMenu = remember { mutableStateOf(false) }
 
-    // Sample dummy data for grocery items
-    val groceryItems = remember {
-        listOf(
-            GroceryItem(
-                id = "1",
-                name = "Apple",
-                quantity = 3,
-                estimatedPrice = 1.99,
-                isChecked = false,
-                imageUrl = "https://example.com/apple.jpg"
-            ),
-            GroceryItem(
-                id = "2",
-                name = "Banana",
-                quantity = 5,
-                estimatedPrice = 0.99,
-                isChecked = false,
-                imageUrl = "https://example.com/banana.jpg"
-            ),
-            GroceryItem(
-                id = "3",
-                name = "Orange",
-                quantity = 2,
-                estimatedPrice = 2.49,
-                isChecked = false,
-                imageUrl = "https://example.com/orange.jpg"
-            )
-        )
-    }
-
     Scaffold(
         bottomBar = { BottomNavBar(navigationController) },
         floatingActionButton = {
@@ -126,7 +98,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
 
                             }
                         ) {
-                            Icon(Icons.Default.List, contentDescription = "Scan Barcode")
+                            Icon(Icons.Default.Search, contentDescription = "Scan Barcode")
                         }
                         FloatingActionButton(
                             onClick = {
@@ -134,7 +106,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                                 navigationController.navigate("add_item")
                             }
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Manually")
+                            Icon(Icons.Default.AddCircle, contentDescription = "Add Manually")
                         }
                     }
                 }
@@ -151,16 +123,6 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
             composable("inventory") { InventoryScreen(authViewModel) }
             composable("grocery_list") {  GroceryListScreen(
                 authViewModel = authViewModel,
-                groceryItems = groceryItems.toMutableStateList(),
-                onUpdateItem = { updatedItem ->
-                    // Update the item logic here
-                },
-                onDeleteItem = { uid ->
-                    // Delete item logic here
-                },
-                onAddCheckedToInventory = {
-                    // Add checked items to inventory logic here
-                }
             ) }
             composable(
                 route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",
