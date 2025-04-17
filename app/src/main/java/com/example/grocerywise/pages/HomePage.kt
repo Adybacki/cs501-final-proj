@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -96,7 +98,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
 
                             }
                         ) {
-                            Icon(Icons.Default.List, contentDescription = "Scan Barcode")
+                            Icon(Icons.Default.Search, contentDescription = "Scan Barcode")
                         }
                         FloatingActionButton(
                             onClick = {
@@ -104,7 +106,7 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                                 navigationController.navigate("add_item")
                             }
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Manually")
+                            Icon(Icons.Default.AddCircle, contentDescription = "Add Manually")
                         }
                     }
                 }
@@ -121,12 +123,6 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
             composable("inventory") { InventoryScreen(authViewModel) }
             composable("grocery_list") {  GroceryListScreen(
                 authViewModel = authViewModel,
-                onUpdateItem = { updatedItem ->
-                    // Update the item logic here
-                },
-                onAddCheckedToInventory = {
-                    // Add checked items to inventory logic here
-                }
             ) }
             composable(
                 route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",

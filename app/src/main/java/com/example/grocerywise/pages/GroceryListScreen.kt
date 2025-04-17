@@ -17,9 +17,11 @@ import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -44,8 +46,6 @@ import com.google.firebase.database.ValueEventListener
 @Composable
 fun GroceryListScreen(
     authViewModel: AuthViewModel,
-    onUpdateItem: (GroceryItem) -> Unit,
-    onAddCheckedToInventory: () -> Unit
 ) {
 
     // Get the current user's UID.
@@ -136,15 +136,18 @@ fun GroceryListScreen(
                         }
                     },
                     dismissContent = {
-                        GroceryListItem(
-                            item = item,
-                            onCheckedChange = { checked ->
-                                onUpdateItem(item.copy(isChecked = checked))
-                            },
-                            onEditClicked = {
-                                showEditDialog.value = item
-                            }
-                        )
+                        if (userId != null) {
+                            GroceryListItem(
+                                item = item,
+                                onEditClicked = {
+                                    showEditDialog.value = item
+                                },
+                                onCheckedChange = { checked ->
+                                    val updatedItem = item.copy(isChecked = checked)
+                                    FirebaseDatabaseManager.updateGroceryListItem(userId, updatedItem)
+                                }
+                            )
+                        }
                     }
                 )
             }
@@ -166,7 +169,28 @@ fun GroceryListScreen(
         Spacer(Modifier.padding(8.dp))
         Column(horizontalAlignment = Alignment.Start) {
             Text("Total: $${"%.2f".format(totalCost)}", fontWeight = FontWeight.Bold, modifier = Modifier.padding(8.dp))
-            Button(onClick = { onAddCheckedToInventory() }) {
+            Button(onClick = {
+                groceryItems.filter { it.isChecked }.forEach { checkedItem ->
+                    val inventoryItem = InventoryItem(
+                        name = checkedItem.name,
+                        quantity = checkedItem.quantity,
+                        imageUrl = checkedItem.imageUrl,
+                        upc = checkedItem.upc,
+                    )
+                    if (userId != null) {
+                        FirebaseDatabaseManager.addInventoryItem(userId, inventoryItem) { success, error ->
+                            if (!success) {
+                                Log.e("InventoryAdd", "Failed to add to inventory: ${error?.message}")
+                            }
+                        }
+                        FirebaseDatabaseManager.removeGroceryListItem(userId, checkedItem.id!!) { success, error ->
+                            if (!success) {
+                                Log.e("GroceryRemove", "Failed to remove grocery item: ${error?.message}")
+                            }
+                        }
+                    }
+                }
+            }) {
                 Text("Add Checked Items to Inventory")
             }
         }
@@ -177,9 +201,10 @@ fun GroceryListScreen(
 @Composable
 fun GroceryListItem(
     item: GroceryItem,
-    onCheckedChange: (Boolean) -> Unit,
-    onEditClicked: () -> Unit
+    onEditClicked: () -> Unit,
+    onCheckedChange: (Boolean) -> Unit
 ) {
+    var checkboxChecked by remember { mutableStateOf(item.isChecked) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -187,8 +212,12 @@ fun GroceryListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = item.isChecked,
-            onCheckedChange = onCheckedChange
+            checked = checkboxChecked,
+            onCheckedChange = { checked ->
+                checkboxChecked = checked
+                item.isChecked = checked
+                onCheckedChange(checked)
+            }
         )
         Spacer(modifier = Modifier.width(8.dp))
         if (item.imageUrl != null) {

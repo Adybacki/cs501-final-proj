@@ -6,6 +6,6 @@ data class GroceryItem(
     val quantity: Int = 0,
     val estimatedPrice: Double = 0.0,
     val upc: String? = null,
-    val isChecked: Boolean = false,
+    var isChecked: Boolean = false,
     val imageUrl: String? = null,
 )
