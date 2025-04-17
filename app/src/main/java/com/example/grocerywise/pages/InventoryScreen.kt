@@ -224,12 +224,14 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                         val dismissState =
                             rememberDismissState(
                                 // leave initialValue at default Idle
-                                confirmStateChange = { state ->
+                                confirmStateChange = { state: DismissValue ->
                                     if (state == DismissValue.DismissedToStart) {
-                                        // remove from Firebase & local list
+                                        // 1. Remove locally
+                                        inventoryItems.remove(item)
+                                        // 2. Tell Firebase to delete
                                         userId?.let { uid ->
                                             FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                if (success) inventoryItems.removeAt(index)
+                                                if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
                                             }
                                         }
                                         true
@@ -374,14 +376,15 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                             val dismissState =
                                 rememberDismissState(
                                     // leave initialValue at default Idle
-                                    confirmStateChange = { state ->
+                                    confirmStateChange = { state: DismissValue ->
                                         if (state == DismissValue.DismissedToStart) {
-                                            // remove from Firebase & local list
-                                            userId?.let { uid ->
-                                                FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                    if (success) inventoryItems.removeAt(index)
+                                            // 1. Remove locally
+                                            inventoryItems.remove(item) d // 2. Tell Firebase to delete
+                                                userId?.let { uid ->
+                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+                                                        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
+                                                    }
                                                 }
-                                            }
                                             true
                                         } else {
                                             false
