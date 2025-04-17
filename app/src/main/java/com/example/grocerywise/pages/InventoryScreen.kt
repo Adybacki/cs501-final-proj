@@ -160,7 +160,7 @@ fun InventoryScreen(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(6.dp),
+                        .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 // Top bar with title and sign out button.
@@ -288,7 +288,8 @@ fun InventoryScreen(
                             },
                             dismissContent = {
                                 Row(
-                                    Modifier.fillMaxWidth(),
+                                    Modifier.fillMaxWidth()
+                                    .padding(vertical = 8.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
@@ -301,8 +302,17 @@ fun InventoryScreen(
                                         )
                                         Spacer(Modifier.width(8.dp))
                                     }
-                                    Text(item.name, fontSize = 20.sp)
+                                    Text(item.name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
                                     Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                        IconButton(onClick = {
+                                            val updated = item.copy(quantity = item.quantity + 1)
+                                            inventoryItems[index] = updated
+                                            userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
+                                        }) { Icon(Icons.Default.Add, contentDescription = "Increase") }
+
+                                        Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
+
                                         IconButton(onClick = {
                                             if (item.quantity > 1) {
                                                 val updated = item.copy(quantity = item.quantity - 1)
@@ -329,14 +339,6 @@ fun InventoryScreen(
                                         }) {
                                             Icon(Icons.Default.Delete, contentDescription = "Decrease")
                                         }
-
-                                        Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
-
-                                        IconButton(onClick = {
-                                            val updated = item.copy(quantity = item.quantity + 1)
-                                            inventoryItems[index] = updated
-                                            userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
-                                        }) { Icon(Icons.Default.Add, contentDescription = "Increase") }
                                     }
                                 }
                             },
