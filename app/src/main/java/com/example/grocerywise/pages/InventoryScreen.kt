@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -22,7 +23,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -149,10 +149,29 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                     Text(
                         text = "Inventory",
                         fontSize = 24.sp,
+                        fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
+                    FloatingActionButton(
+                        onClick = {
+                            authViewModel.signout()
+                        },
+                        containerColor = Color.Red,
+                        modifier = Modifier.width(55.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(24.dp),
+                                painter = painterResource(id = R.drawable.signout),
+                                contentDescription = "signout",
+                            )
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 // Display current usage as a horizontal progress bar.
@@ -181,6 +200,7 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                             ) {
                                 Text(
                                     text = name,
+                                    fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
                                     fontSize = 10.sp,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.padding(2.dp),
@@ -332,7 +352,7 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                             authViewModel.signout()
                         },
                         containerColor = Color.Red,
-                        modifier = Modifier.fillMaxWidth(0.8f),
+                        modifier = Modifier.fillMaxWidth(0.4f),
                     ) {
                         Icon(
                             modifier = Modifier.size(24.dp),
