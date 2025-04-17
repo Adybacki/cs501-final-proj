@@ -290,7 +290,11 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         IconButton(onClick = {
                                             if (item.quantity > 1) {
-                                                // … your existing “decrement” logic …
+                                                val updated = item.copy(quantity = item.quantity - 1)
+                                                inventoryItems[index] = updated
+                                                userId?.let { uid ->
+                                                    FirebaseDatabaseManager.updateInventoryItem(uid, updated)
+                                                }
                                             } else {
                                                 // 1) Remove locally first (so immediately disappears from UI)
                                                 inventoryItems.remove(item)
@@ -415,7 +419,11 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                                         // 2) “–” button:
                                         IconButton(onClick = {
                                             if (item.quantity > 1) {
-                                                // … your existing “decrement” logic …
+                                                val updated = item.copy(quantity = item.quantity - 1)
+                                                inventoryItems[index] = updated
+                                                userId?.let { uid ->
+                                                    FirebaseDatabaseManager.updateInventoryItem(uid, updated)
+                                                }
                                             } else {
                                                 // 1) Remove locally first (so immediately disappears from UI)
                                                 inventoryItems.remove(item)
