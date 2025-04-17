@@ -188,15 +188,17 @@ fun AddItemScreen(
             Button(
                 onClick = {
                     if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
-                        // Create an GroceryListItem object in db
-                        val newItem = (
+                        // Create a GroceryListItem object in db, price 默认 0.0
+                        val qty = quantity.value.toIntOrNull() ?: 0
+                        val price = priceEstimate.value.toDoubleOrNull() ?: 0.0
+                        val newItem =
                             GroceryItem(
                                 name = itemName.value,
-                                quantity = quantity.value.toIntOrNull() ?: 0,
+                                quantity = qty,
                                 upc = upcCode.value,
                                 imageUrl = selectedImageUri.value?.toString(),
-                                estimatedPrice = priceEstimate.value.toDouble(),
-                            ))
+                                estimatedPrice = price,
+                            )
                         FirebaseDatabaseManager.addGroceryListItem(userId, newItem) { success, exception ->
                             if (success) {
                                 navController.popBackStack()
