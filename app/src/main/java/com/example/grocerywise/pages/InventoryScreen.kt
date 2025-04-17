@@ -235,7 +235,7 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
             Row(
                 modifier =
                     Modifier
-                        .fillMaxSize()
+                        .fillMaxSize(1f)
                         .padding(vertical = 5.dp, horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -323,7 +323,7 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                 }
 
                 Column(
-                    modifier = Modifier.fillMaxWidth(0.2f).fillMaxHeight().padding(top = 16.dp),
+                    modifier = Modifier.fillMaxWidth(1f).fillMaxHeight().padding(top = 16.dp),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -332,6 +332,7 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                             authViewModel.signout()
                         },
                         containerColor = Color.Red,
+                        modifier = Modifier.fillMaxWidth(0.8f),
                     ) {
                         Icon(
                             modifier = Modifier.size(24.dp),
