@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
@@ -17,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
@@ -24,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -41,7 +45,6 @@ import com.google.firebase.database.ValueEventListener
 fun GroceryListScreen(
     authViewModel: AuthViewModel,
     onUpdateItem: (GroceryItem) -> Unit,
-    onDeleteItem: (String) -> Unit,
     onAddCheckedToInventory: () -> Unit
 ) {
 
@@ -51,6 +54,7 @@ fun GroceryListScreen(
 
     // List to store inventory items from Firebase.
     val groceryItems = remember { mutableStateListOf<GroceryItem>() }
+    val showEditDialog = remember { mutableStateOf<GroceryItem?>(null) }
 
     // Listen for changes in the inventory data from the database.
     LaunchedEffect(userId) {
@@ -93,7 +97,13 @@ fun GroceryListScreen(
                 val dismissState = rememberDismissState(
                     confirmStateChange = { state ->
                         if (state == DismissValue.DismissedToStart) {
-                            onDeleteItem(item.id!!)
+                            FirebaseDatabaseManager.removeGroceryListItem(userId!!, item.id!!) { success, exception ->
+                                if (success) {
+                                    Log.d("GroceryList", "Item removed successfully.")
+                                } else {
+                                    Log.e("GroceryList", "Error removing item: ${exception?.message}")
+                                }
+                            }
                             true
                         } else false
                     }
@@ -132,7 +142,7 @@ fun GroceryListScreen(
                                 onUpdateItem(item.copy(isChecked = checked))
                             },
                             onEditClicked = {
-                                //TODO: edit to show bottom sheet or dialog to update quantity/price
+                                showEditDialog.value = item
                             }
                         )
                     }
@@ -140,15 +150,24 @@ fun GroceryListScreen(
             }
         }
 
+        showEditDialog.value?.let { itemToEdit ->
+            EditGroceryItemDialog(
+                item = itemToEdit,
+                onDismiss = { showEditDialog.value = null },
+                onConfirm = { updatedItem ->
+                    if (userId != null) {
+                        FirebaseDatabaseManager.updateGroceryListItem(userId, updatedItem)
+                    }
+                    showEditDialog.value = null
+                }
+            )
+        }
+
         Spacer(Modifier.padding(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Total: $${"%.2f".format(totalCost)}", fontWeight = FontWeight.Bold)
+        Column(horizontalAlignment = Alignment.Start) {
+            Text("Total: $${"%.2f".format(totalCost)}", fontWeight = FontWeight.Bold, modifier = Modifier.padding(8.dp))
             Button(onClick = { onAddCheckedToInventory() }) {
-                Text("Add to Inventory")
+                Text("Add Checked Items to Inventory")
             }
         }
     }
@@ -188,4 +207,61 @@ fun GroceryListItem(
             Icon(Icons.Default.MoreVert, contentDescription = "Edit item")
         }
     }
+}
+
+@Composable
+fun EditGroceryItemDialog(
+    item: GroceryItem,
+    onDismiss: () -> Unit,
+    onConfirm: (GroceryItem) -> Unit
+) {
+    val quantity = remember { mutableStateOf(item.quantity.toString()) }
+    val price = remember { mutableStateOf(item.estimatedPrice.toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit ${item.name}") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = quantity.value,
+                    onValueChange = { newValue ->
+                        // Allow only digits and values up to 99.
+                        if (newValue.all { it.isDigit() } && (newValue.isEmpty() || newValue.toInt() <= 99)) {
+                            quantity.value = newValue
+                        }
+                    },
+                    label = { Text("Quantity") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+                OutlinedTextField(
+                    value = price.value,
+                    onValueChange = { newValue ->
+                        // Allow only valid price formats (up to 7 digits and 2 decimal places).
+                        val regex = Regex("^\\d{0,7}(\\.\\d{0,2})?$")
+                        if (newValue.isEmpty() || regex.matches(newValue)) {
+                            price.value = newValue
+                        }
+                    },
+                    label = { Text("Estimated Price") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                val updated = item.copy(
+                    quantity = quantity.value.toIntOrNull() ?: item.quantity,
+                    estimatedPrice = price.value.toDoubleOrNull() ?: item.estimatedPrice
+                )
+                onConfirm(updated)
+            }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

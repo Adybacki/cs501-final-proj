@@ -209,7 +209,6 @@ fun AddItemScreen(
                                     ).show()
                             }
                         }
-                        navController.popBackStack()
                     }
                 },
                 enabled = itemName.value.isNotEmpty() && quantity.value.isNotEmpty(),

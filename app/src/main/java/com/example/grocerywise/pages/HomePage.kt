@@ -124,9 +124,6 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController, authVi
                 onUpdateItem = { updatedItem ->
                     // Update the item logic here
                 },
-                onDeleteItem = { uid ->
-                    // Delete item logic here
-                },
                 onAddCheckedToInventory = {
                     // Add checked items to inventory logic here
                 }
