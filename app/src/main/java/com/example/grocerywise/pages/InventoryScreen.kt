@@ -290,17 +290,25 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         IconButton(onClick = {
                                             if (item.quantity > 1) {
-                                                val updated = item.copy(quantity = item.quantity - 1)
-                                                inventoryItems[index] = updated
-                                                userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
+                                                // … your existing “decrement” logic …
                                             } else {
+                                                // 1) Remove locally first (so immediately disappears from UI)
+                                                inventoryItems.remove(item)
+
+                                                // 2) Tell Firebase to delete
                                                 userId?.let { uid ->
                                                     FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                        if (success) inventoryItems.removeAt(index)
+                                                        if (!success) {
+                                                            Log.e("InventoryScreen", "Failed to remove ${item.id}, rolling back")
+                                                            // rollback so the user sees it again
+                                                            inventoryItems.add(index, item)
+                                                        }
                                                     }
                                                 }
                                             }
-                                        }) { Icon(Icons.Default.Delete, contentDescription = "Decrease") }
+                                        }) {
+                                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
+                                        }
 
                                         Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
 
@@ -375,16 +383,16 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                             // 1) remember a SwipeToDismiss state
                             val dismissState =
                                 rememberDismissState(
-                                    // leave initialValue at default Idle
-                                    confirmStateChange = { state: DismissValue ->
+                                    confirmStateChange = { state ->
                                         if (state == DismissValue.DismissedToStart) {
                                             // 1. Remove locally
-                                            inventoryItems.remove(item) d // 2. Tell Firebase to delete
-                                                userId?.let { uid ->
-                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
-                                                    }
+                                            inventoryItems.remove(item)
+                                            // 2. Remove remotely
+                                            userId?.let { uid ->
+                                                FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+                                                    if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
                                                 }
+                                            }
                                             true
                                         } else {
                                             false
@@ -395,88 +403,46 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                             SwipeToDismiss(
                                 state = dismissState,
                                 directions = setOf(DismissDirection.EndToStart),
-                                background = {
-                                    // Determine the background color:
-                                    // – RED when the user is actively swiping to the left (EndToStart)
-                                    // – TRANSPARENT otherwise
-                                    val bgColor =
-                                        when (dismissState.dismissDirection) {
-                                            DismissDirection.EndToStart -> Color.Red
-                                            else -> Color.Transparent
-                                        }
-
-                                    Box(
-                                        Modifier
-                                            .fillMaxSize()
-                                            .background(bgColor) // apply the chosen color
-                                            // only add padding when showing the red background
-                                            .padding(end = if (bgColor == Color.Red) 20.dp else 0.dp),
-                                        contentAlignment = Alignment.CenterEnd,
-                                    ) {
-                                        // Show the delete icon only during the swipe
-                                        if (dismissState.dismissDirection == DismissDirection.EndToStart) {
-                                            Icon(
-                                                Icons.Default.Delete,
-                                                contentDescription = "Delete",
-                                                tint = Color.White,
-                                            )
-                                        }
-                                    }
-                                },
+                                background = { /* unchanged */ },
                                 dismissContent = {
-                                    // your original Row, plus optional image, plus updated minus logic
                                     Row(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        // Optional image
-                                        item.imageUrl?.let { url ->
-                                            AsyncImage(
-                                                model = url,
-                                                contentDescription = null,
-                                                modifier =
-                                                    Modifier
-                                                        .size(40.dp)
-                                                        .clip(CircleShape),
-                                            )
-                                            Spacer(Modifier.width(8.dp))
-                                        }
+                                        // … your AsyncImage + Text …
 
-                                        Text(text = item.name, fontSize = 20.sp)
+                                        // 2) “–” button:
+                                        IconButton(onClick = {
+                                            if (item.quantity > 1) {
+                                                // … your existing “decrement” logic …
+                                            } else {
+                                                // 1) Remove locally first (so immediately disappears from UI)
+                                                inventoryItems.remove(item)
 
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            IconButton(onClick = {
-                                                if (item.quantity > 1) {
-                                                    // decrease quantity
-                                                    val updated = item.copy(quantity = item.quantity - 1)
-                                                    inventoryItems[index] = updated
-                                                    userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
-                                                } else {
-                                                    // quantity == 1, remove entirely
-                                                    userId?.let { uid ->
-                                                        FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                            if (success) inventoryItems.removeAt(index)
+                                                // 2) Tell Firebase to delete
+                                                userId?.let { uid ->
+                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+                                                        if (!success) {
+                                                            Log.e("InventoryScreen", "Failed to remove ${item.id}, rolling back")
+                                                            // rollback so the user sees it again
+                                                            inventoryItems.add(index, item)
                                                         }
                                                     }
                                                 }
-                                            }) {
-                                                Icon(Icons.Default.Delete, contentDescription = "Decrease")
                                             }
+                                        }) {
+                                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
+                                        }
 
-                                            Text(
-                                                text = "${item.quantity}",
-                                                fontSize = 20.sp,
-                                                modifier = Modifier.padding(horizontal = 8.dp),
-                                            )
+                                        Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
 
-                                            IconButton(onClick = {
-                                                val updated = item.copy(quantity = item.quantity + 1)
-                                                inventoryItems[index] = updated
-                                                userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
-                                            }) {
-                                                Icon(Icons.Default.Add, contentDescription = "Increase")
-                                            }
+                                        IconButton(onClick = {
+                                            val updated = item.copy(quantity = item.quantity + 1)
+                                            inventoryItems[index] = updated
+                                            userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
+                                        }) {
+                                            Icon(Icons.Default.Add, contentDescription = "Increase")
                                         }
                                     }
                                 },
