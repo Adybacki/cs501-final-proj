@@ -1,5 +1,6 @@
 package com.example.grocerywise.pages
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,15 +26,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.rememberDismissState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.window.core.layout.WindowWidthSizeClass
 import coil.compose.AsyncImage
 import com.example.grocerywise.AuthViewModel
@@ -97,13 +104,19 @@ fun hexToColor(hex: String): Color {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun InventoryScreen(authViewModel: AuthViewModel) {
+fun InventoryScreen(
+    authViewModel: AuthViewModel,
+    navController: NavController,
+) {
     // Get the current user's UID.
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid
 
     // List to store inventory items from Firebase.
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
+
+    // NEW: which item is awaiting the “add to shopping list?” prompt?
+    var pendingDelete by remember { mutableStateOf<InventoryItem?>(null) }
     val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
 
     // Listen for changes in the inventory data from the database.
@@ -227,13 +240,15 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                                 confirmStateChange = { state: DismissValue ->
                                     if (state == DismissValue.DismissedToStart) {
                                         // 1. Remove locally
-                                        inventoryItems.remove(item)
+                                        // inventoryItems.remove(item)
                                         // 2. Tell Firebase to delete
-                                        userId?.let { uid ->
-                                            FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
-                                            }
-                                        }
+                                        // userId?.let { uid ->
+                                        //    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+                                        //        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
+                                        //    }
+                                        // }
+                                        // ask the user if they want to add it to the shopping list:
+                                        pendingDelete = item
                                         true
                                     } else {
                                         false
@@ -297,18 +312,19 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                                                 }
                                             } else {
                                                 // 1) Remove locally first (so immediately disappears from UI)
-                                                inventoryItems.remove(item)
+//                                                inventoryItems.remove(item)
 
                                                 // 2) Tell Firebase to delete
-                                                userId?.let { uid ->
-                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                                        if (!success) {
-                                                            Log.e("InventoryScreen", "Failed to remove ${item.id}, rolling back")
-                                                            // rollback so the user sees it again
-                                                            inventoryItems.add(index, item)
-                                                        }
-                                                    }
-                                                }
+//                                                userId?.let { uid ->
+//                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+//                                                        if (!success) {
+//                                                            Log.e("InventoryScreen", "Failed to remove ${item.id}, rolling back")
+//                                                            // rollback so the user sees it again
+//                                                            inventoryItems.add(index, item)
+//                                                        }
+//                                                    }
+//                                                }
+                                                pendingDelete = item
                                             }
                                         }) {
                                             Icon(Icons.Default.Delete, contentDescription = "Decrease")
@@ -326,6 +342,54 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
                             },
                         )
                     }
+                }
+                // only show when an item is pending
+                pendingDelete?.let { itemToDelete ->
+                    AlertDialog(
+                        onDismissRequest = { pendingDelete = null },
+                        title = { Text("Remove “${itemToDelete.name}”?") },
+                        text = { Text("Do you want to put it on your shopping list before deleting?") },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                // 1) add to grocery list
+//                                FirebaseDatabaseManager.addGroceryListItem(
+//                                    userId!!,
+//                                    GroceryItem(
+//                                        name = itemToDelete.name,
+//                                        quantity = itemToDelete.quantity,
+//                                        estimatedPrice = 0.0, // or pull from your InventoryItem if you track price
+//                                        imageUrl = itemToDelete.imageUrl,
+//                                        upc = itemToDelete.upc,
+//                                    ),
+//                                )
+                                // 2) delete from inventory
+                                FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { success, _ ->
+                                    if (!success) Log.e("InventoryScreen", "delete failed")
+                                }
+                                // 3) navigate to your AddItemScreen, passing fields as parameters
+                                navController.navigate(
+                                    "add_item?" +
+                                        "productName=${Uri.encode(itemToDelete.name)}" +
+                                        "&productUpc=${Uri.encode(itemToDelete.upc ?: "")}" +
+                                        "&productPrice=" + // leave blank or supply default
+                                        "&productImageUri=", // leave blank or supply default
+                                )
+
+                                pendingDelete = null
+                            }) {
+                                Text("Yes")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = {
+                                // just delete without adding to list
+                                FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { _, _ -> }
+                                pendingDelete = null
+                            }) {
+                                Text("No")
+                            }
+                        },
+                    )
                 }
             }
         }
