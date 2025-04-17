@@ -54,8 +54,8 @@ fun LoginPage(
             else -> Unit
         }
     }
-    when (info) {
-        WindowWidthSizeClass.COMPACT -> {
+   //when (info) {
+       // WindowWidthSizeClass.COMPACT -> {
             Column(
                 modifier =
                     modifier
@@ -108,7 +108,7 @@ fun LoginPage(
 
                 Button(onClick = {
                     authViewModel.login(email, password)
-                }, enabled = authState.value != AuthState.Loading) {
+                }, enabled = authState.value != AuthState.Loading && (password != "" && email != "")) {
                     Text("Login")
                 }
 
@@ -118,65 +118,65 @@ fun LoginPage(
                     navController.navigate("signup")
                 }) { Text("Don't have an account? Sign up here") }
             }
-        }
+        //}
 
-        WindowWidthSizeClass.EXPANDED -> {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(vertical = 10.dp, horizontal = 20.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    "Welcome to Grocery Wise",
-                    fontSize = 30.sp,
-                    fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
-                    fontWeight = FontWeight.W600,
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = {
-                        Text("Email", fontFamily = FontFamily(Font(resId = R.font.defaultfont)))
-                    },
-                    maxLines = 1,
-                    colors =
-                        TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFF44B863),
-                            focusedLabelColor = Color(0xFF615fd4),
-                        ),
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = {
-                        Text("Password", fontFamily = FontFamily(Font(resId = R.font.defaultfont)))
-                    },
-                    maxLines = 1,
-                    colors =
-                        TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFF44B863),
-                            focusedLabelColor = Color(0xFF615fd4),
-                        ),
-                    visualTransformation = PasswordVisualTransformation(),
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(onClick = {
-                    authViewModel.login(email, password)
-                }, enabled = (email != "" && password != "")) {
-                    Text("Login")
-                }
-                Spacer(modifier = Modifier.height(5.dp))
-                TextButton(onClick = {
-                    navController.navigate("signup")
-                }) { Text("Don't have an account? Sign up here") }
-            }
-        }
-    }
+//        WindowWidthSizeClass.EXPANDED -> {
+//            Column(
+//                modifier =
+//                    Modifier
+//                        .fillMaxSize()
+//                        .padding(vertical = 10.dp, horizontal = 20.dp),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//            ) {
+//                Text(
+//                    "Welcome to Grocery Wise",
+//                    fontSize = 30.sp,
+//                    fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+//                    fontWeight = FontWeight.W600,
+//                )
+//                Spacer(modifier = Modifier.height(20.dp))
+//                OutlinedTextField(
+//                    value = email,
+//                    onValueChange = { email = it },
+//                    label = {
+//                        Text("Email", fontFamily = FontFamily(Font(resId = R.font.defaultfont)))
+//                    },
+//                    maxLines = 1,
+//                    colors =
+//                        TextFieldDefaults.colors(
+//                            focusedIndicatorColor = Color(0xFF44B863),
+//                            focusedLabelColor = Color(0xFF615fd4),
+//                        ),
+//                )
+//                Spacer(modifier = Modifier.height(10.dp))
+//                OutlinedTextField(
+//                    value = password,
+//                    onValueChange = { password = it },
+//                    label = {
+//                        Text("Password", fontFamily = FontFamily(Font(resId = R.font.defaultfont)))
+//                    },
+//                    maxLines = 1,
+//                    colors =
+//                        TextFieldDefaults.colors(
+//                            focusedIndicatorColor = Color(0xFF44B863),
+//                            focusedLabelColor = Color(0xFF615fd4),
+//                        ),
+//                    visualTransformation = PasswordVisualTransformation(),
+//                )
+//
+//                Spacer(modifier = Modifier.height(8.dp))
+//
+//                Button(onClick = {
+//                    authViewModel.login(email, password)
+//                }, enabled = (email != "" && password != "")) {
+//                    Text("Login")
+//                }
+//                Spacer(modifier = Modifier.height(5.dp))
+//                TextButton(onClick = {
+//                    navController.navigate("signup")
+//                }) { Text("Don't have an account? Sign up here") }
+//            }
+//        }
+    //}
 }

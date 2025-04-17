@@ -154,8 +154,8 @@ fun InventoryScreen(
         }
     // Shuffle colors for visual variety.
     val shuffledColors = remember { colors.shuffled() }
-//    when (info) {
-//        WindowWidthSizeClass.COMPACT -> {
+    //when (info) {
+       // WindowWidthSizeClass.COMPACT -> {
             Column(
                 modifier =
                     Modifier
@@ -392,9 +392,9 @@ fun InventoryScreen(
                             }
                         },
                     )
-                //}
-           // }
-        }
+                }
+            }
+       // }
 
 //        WindowWidthSizeClass.EXPANDED -> {
 //            Row(
@@ -546,5 +546,5 @@ fun InventoryScreen(
 //                }
 //            }
 //        }
-    }
+    //}
 }
