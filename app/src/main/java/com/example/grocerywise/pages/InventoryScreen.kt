@@ -12,15 +12,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
@@ -28,11 +31,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.window.core.layout.WindowWidthSizeClass
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.InventoryItem
 import com.google.firebase.auth.FirebaseAuth
@@ -87,6 +95,7 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
 
     // List to store inventory items from Firebase.
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
+    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
 
     // Listen for changes in the inventory data from the database.
     LaunchedEffect(userId) {
@@ -123,97 +132,212 @@ fun InventoryScreen(authViewModel: AuthViewModel) {
         }
     // Shuffle colors for visual variety.
     val shuffledColors = remember { colors.shuffled() }
-
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(6.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        // Top bar with title and sign out button.
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "Inventory",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-            )
-            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
-        }
-        Spacer(modifier = Modifier.height(20.dp))
-        // Display current usage as a horizontal progress bar.
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                "Current Usage:",
-                fontSize = 14.sp,
-                color = Color(0xFF29b34e),
-            )
-            Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
-                percentageList.forEachIndexed { index, (name, per) ->
-                    val color = hexToColor(shuffledColors[index % shuffledColors.size])
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth(per)
-                                .background(color = color),
-                    ) {
-                        Text(
-                            text = name,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(2.dp),
-                        )
+    when (info) {
+        WindowWidthSizeClass.COMPACT -> {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(6.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                // Top bar with title and sign out button.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Inventory",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                // Display current usage as a horizontal progress bar.
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        "Current Usage:",
+                        fontSize = 14.sp,
+                        color = Color(0xFF29b34e),
+                    )
+                    Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
+                        percentageList.forEachIndexed { index, (name, per) ->
+                            val color = hexToColor(shuffledColors[index % shuffledColors.size])
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .fillMaxHeight()
+                                        .fillMaxWidth(per)
+                                        .background(color = color),
+                            ) {
+                                Text(
+                                    text = name,
+                                    fontSize = 10.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(2.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+                // List the inventory items with update buttons.
+                LazyColumn {
+                    itemsIndexed(inventoryItems) { index, item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(text = item.name, fontSize = 20.sp)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = {
+                                    if (item.quantity > 0) {
+                                        val updatedItem = item.copy(quantity = item.quantity - 1)
+                                        inventoryItems[index] = updatedItem
+                                        if (userId != null) {
+                                            FirebaseDatabaseManager.updateInventoryItem(userId, updatedItem)
+                                        }
+                                    }
+                                }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Decrease")
+                                }
+                                Text(
+                                    text = "${item.quantity}",
+                                    fontSize = 20.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                )
+                                IconButton(onClick = {
+                                    val updatedItem = item.copy(quantity = item.quantity + 1)
+                                    inventoryItems[index] = updatedItem
+                                    if (userId != null) {
+                                        FirebaseDatabaseManager.updateInventoryItem(userId, updatedItem)
+                                    }
+                                }) {
+                                    Icon(Icons.Default.Add, contentDescription = "Increase")
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        // List the inventory items with update buttons.
-        LazyColumn {
-            itemsIndexed(inventoryItems) { index, item ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+
+        WindowWidthSizeClass.EXPANDED -> {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(vertical = 5.dp, horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(0.8f).fillMaxHeight(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(text = item.name, fontSize = 20.sp)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = {
-                            if (item.quantity > 0) {
-                                val updatedItem = item.copy(quantity = item.quantity - 1)
-                                inventoryItems[index] = updatedItem
-                                if (userId != null) {
-                                    FirebaseDatabaseManager.updateInventoryItem(userId, updatedItem)
+                    Text(
+                        "Inventory",
+                        fontSize = 30.sp,
+                        fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+                        fontWeight = FontWeight.W600,
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            "Current Usage:",
+                            fontSize = 18.sp,
+                            fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+                            color = Color(0xFF29b34e),
+                        )
+                        Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
+                            percentageList.forEachIndexed { index, (name, per) ->
+                                val color = hexToColor(shuffledColors[index % shuffledColors.size])
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxHeight()
+                                            .fillMaxWidth(per)
+                                            .background(color = color),
+                                ) {
                                 }
                             }
-                        }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
                         }
-                        Text(
-                            text = "${item.quantity}",
-                            fontSize = 20.sp,
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                        )
-                        IconButton(onClick = {
-                            val updatedItem = item.copy(quantity = item.quantity + 1)
-                            inventoryItems[index] = updatedItem
-                            if (userId != null) {
-                                FirebaseDatabaseManager.updateInventoryItem(userId, updatedItem)
+                    }
+// lazy Column for lists
+                    LazyColumn(Modifier.weight(1f).fillMaxWidth(), userScrollEnabled = true) {
+                        itemsIndexed(inventoryItems) { index, item ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(text = item.name, fontSize = 18.sp, fontFamily = FontFamily(Font(resId = R.font.defaultfont)))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = {
+                                        if (item.quantity > 0) {
+                                            val updatedItem = item.copy(quantity = item.quantity - 1)
+                                            inventoryItems[index] = updatedItem
+                                            if (userId != null) {
+                                                FirebaseDatabaseManager.updateInventoryItem(userId, updatedItem)
+                                            }
+                                        }
+                                    }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Decrease")
+                                    }
+                                    Text(
+                                        text = "${item.quantity}",
+                                        fontSize = 20.sp,
+                                        modifier = Modifier.padding(horizontal = 4.dp),
+                                    )
+                                    IconButton(onClick = {
+                                        val updatedItem = item.copy(quantity = item.quantity + 1)
+                                        inventoryItems[index] = updatedItem
+                                        if (userId != null) {
+                                            FirebaseDatabaseManager.updateInventoryItem(userId, updatedItem)
+                                        }
+                                    }) {
+                                        Icon(Icons.Default.Add, contentDescription = "Increase")
+                                    }
+                                }
                             }
-                        }) {
-                            Icon(Icons.Default.Add, contentDescription = "Increase")
                         }
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(0.2f).fillMaxHeight().padding(top = 16.dp),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    FloatingActionButton(
+                        onClick = {
+                            authViewModel.signout()
+                        },
+                        containerColor = Color.Red,
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(24.dp),
+                            painter = painterResource(id = R.drawable.signout),
+                            contentDescription = "signout",
+                        )
                     }
                 }
             }
