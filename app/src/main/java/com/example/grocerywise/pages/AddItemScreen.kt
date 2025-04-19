@@ -50,7 +50,7 @@ fun AddItemScreen(
 ) {
     // Pre-populate fields if product details are provided.
     val itemName = remember { mutableStateOf(productName ?: "") }
-    val quantity = remember { mutableStateOf("") }
+    val quantity = remember { mutableStateOf("1") }
     val priceEstimate = remember { mutableStateOf(productPrice ?: "") }
     val upcCode = remember { mutableStateOf(productUpc ?: "") }
     val selectedImageUri = remember { mutableStateOf<Uri?>(productImageUri?.let { Uri.parse(it) }) }
@@ -161,7 +161,7 @@ fun AddItemScreen(
                             )
                         FirebaseDatabaseManager.addInventoryItem(userId, newItem) { success, exception ->
                             if (success) {
-                                navController.popBackStack()
+                                navController.navigate("grocery_list")
                             } else {
                                 Toast
                                     .makeText(
@@ -201,7 +201,7 @@ fun AddItemScreen(
                             )
                         FirebaseDatabaseManager.addGroceryListItem(userId, newItem) { success, exception ->
                             if (success) {
-                                navController.popBackStack()
+                                navController.navigate("grocery_list")
                             } else {
                                 Toast
                                     .makeText(
@@ -215,7 +215,7 @@ fun AddItemScreen(
                 },
                 enabled = itemName.value.isNotEmpty() && quantity.value.isNotEmpty(),
             ) {
-                Text("Add to Shopping List")
+                Text("Add to Grocery List")
             }
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +26,7 @@ fun BottomNavBar(navController: NavController) {
             onClick = { navController.navigate("inventory") },
         )
         BottomNavigationItem(
-            icon = { Icon(Icons.Default.List, contentDescription = "Grocery List", tint = Color.White) },
+            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Grocery List", tint = Color.White) },
             label = { Text("Grocery List", color = Color.White) },
             selected = navController.currentDestination?.route == "grocery_list",
             onClick = { navController.navigate("grocery_list") },
@@ -40,6 +41,7 @@ fun BottomNavBar(navController: NavController) {
                     tint = Color.White,
                 )
             },
+            label = { Text("Recipes", color = Color.White) },
             onClick = { navController.navigate("recipe") },
             selected = navController.currentDestination?.route == "recipe",
         )
