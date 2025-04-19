@@ -1,5 +1,14 @@
 
 
 
-*.iml .gradle/ build/ local.properties .DS_Store .idea/ /captures .externalNativeBuild .cxx /.vscode
+*.iml
+./.gradle
+./.idea
+build/
+ local.properties
+  .DS_Store
+  .idea/
+  /captures
+   .externalNativeBuild .cxx
+   /.vscode
 local.properties
