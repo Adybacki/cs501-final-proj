@@ -3,6 +3,8 @@ package com.example.grocerywise.pages
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,8 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -52,8 +54,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.window.core.layout.WindowWidthSizeClass
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
@@ -111,7 +117,17 @@ fun InventoryScreen(
     // Get the current user's UID.
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid
+    // Lottie Load up
+    val signoutAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/signout.json"))
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val progress_so by animateLottieCompositionAsState(
+        composition = signoutAni,
+        isPlaying = isPressed,
+        restartOnPlay = true,
+        iterations = LottieConstants.IterateForever,
+    )
     // List to store inventory items from Firebase.
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
 
@@ -154,177 +170,184 @@ fun InventoryScreen(
         }
     // Shuffle colors for visual variety.
     val shuffledColors = remember { colors.shuffled() }
-    //when (info) {
-       // WindowWidthSizeClass.COMPACT -> {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+    // when (info) {
+    // WindowWidthSizeClass.COMPACT -> {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // Top bar with title and sign out button.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Inventory",
+                fontSize = 24.sp,
+                fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            FloatingActionButton(
+                onClick = {
+                    authViewModel.signout()
+                },
+                interactionSource = interactionSource,
+                containerColor = Color.Red,
+                modifier = Modifier.width(55.dp).onFocusEvent { },
             ) {
-                // Top bar with title and sign out button.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = "Inventory",
-                        fontSize = 24.sp,
-                        fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
+                    LottieAnimation(
+                        composition = signoutAni,
+                        progress = { if (isPressed) progress_so else 0f },
+                        modifier = Modifier.size(50.dp),
                     )
-                    FloatingActionButton(
-                        onClick = {
-                            authViewModel.signout()
-                        },
-                        containerColor = Color.Red,
-                        modifier = Modifier.width(55.dp),
+
+//                            Icon(
+//                                modifier = Modifier.size(24.dp),
+//                                painter = painterResource(id = R.drawable.signout),
+//                                contentDescription = "signout",
+//                            )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        // Display current usage as a horizontal progress bar.
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                "Current Usage:",
+                fontSize = 14.sp,
+                color = Color(0xFF29b34e),
+            )
+            Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
+                percentageList.forEachIndexed { index, (name, per) ->
+                    val color = hexToColor(shuffledColors[index % shuffledColors.size])
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(per)
+                                .background(color = color),
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(24.dp),
-                                painter = painterResource(id = R.drawable.signout),
-                                contentDescription = "signout",
-                            )
-                        }
+                        Text(
+                            text = name,
+                            fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(2.dp),
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(20.dp))
-                // Display current usage as a horizontal progress bar.
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        "Current Usage:",
-                        fontSize = 14.sp,
-                        color = Color(0xFF29b34e),
+            }
+        }
+        // List the inventory items with update buttons.
+        LazyColumn {
+            itemsIndexed(inventoryItems, key = { _, item -> item.id!! }) { index, item ->
+                val dismissState =
+                    rememberDismissState(
+                        // leave initialValue at default Idle
+                        confirmStateChange = { state: DismissValue ->
+                            if (state == DismissValue.DismissedToStart) {
+                                // 1. Remove locally
+                                // inventoryItems.remove(item)
+                                // 2. Tell Firebase to delete
+                                // userId?.let { uid ->
+                                //    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+                                //        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
+                                //    }
+                                // }
+                                // ask the user if they want to add it to the shopping list:
+                                pendingDelete = item
+                                true
+                            } else {
+                                false
+                            }
+                        },
                     )
-                    Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
-                        percentageList.forEachIndexed { index, (name, per) ->
-                            val color = hexToColor(shuffledColors[index % shuffledColors.size])
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxHeight()
-                                        .fillMaxWidth(per)
-                                        .background(color = color),
-                            ) {
-                                Text(
-                                    text = name,
-                                    fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
-                                    fontSize = 10.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(2.dp),
+
+                SwipeToDismiss(
+                    state = dismissState,
+                    directions = setOf(DismissDirection.EndToStart),
+                    background = {
+                        // Determine the background color:
+                        // – RED when the user is actively swiping to the left (EndToStart)
+                        // – TRANSPARENT otherwise
+                        val bgColor =
+                            when (dismissState.dismissDirection) {
+                                DismissDirection.EndToStart -> Color.Red
+                                else -> Color.Transparent
+                            }
+
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(bgColor)
+                                // only add padding when showing the red background
+                                .padding(end = if (bgColor == Color.Red) 20.dp else 0.dp),
+                            contentAlignment = Alignment.CenterEnd,
+                        ) {
+                            if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete",
+                                    tint = Color.White,
                                 )
                             }
                         }
-                    }
-                }
-                // List the inventory items with update buttons.
-                LazyColumn {
-                    itemsIndexed(inventoryItems, key = { _, item -> item.id!! }) { index, item ->
-                        val dismissState =
-                            rememberDismissState(
-                                // leave initialValue at default Idle
-                                confirmStateChange = { state: DismissValue ->
-                                    if (state == DismissValue.DismissedToStart) {
-                                        // 1. Remove locally
-                                        // inventoryItems.remove(item)
-                                        // 2. Tell Firebase to delete
-                                        // userId?.let { uid ->
-                                        //    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                        //        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
-                                        //    }
-                                        // }
-                                        // ask the user if they want to add it to the shopping list:
-                                        pendingDelete = item
-                                        true
+                    },
+                    dismissContent = {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            // show image if you have one
+                            item.imageUrl?.let { url ->
+                                AsyncImage(
+                                    model = url,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(40.dp).clip(CircleShape),
+                                )
+                                Spacer(Modifier.width(8.dp))
+                            }
+                            Text(item.name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = {
+                                    val updated = item.copy(quantity = item.quantity + 1)
+                                    inventoryItems[index] = updated
+                                    userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
+                                }) { Icon(Icons.Default.Add, contentDescription = "Increase") }
+
+                                Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
+
+                                IconButton(onClick = {
+                                    if (item.quantity > 1) {
+                                        val updated = item.copy(quantity = item.quantity - 1)
+                                        inventoryItems[index] = updated
+                                        userId?.let { uid ->
+                                            FirebaseDatabaseManager.updateInventoryItem(uid, updated)
+                                        }
                                     } else {
-                                        false
-                                    }
-                                },
-                            )
-
-                        SwipeToDismiss(
-                            state = dismissState,
-                            directions = setOf(DismissDirection.EndToStart),
-                            background = {
-                                // Determine the background color:
-                                // – RED when the user is actively swiping to the left (EndToStart)
-                                // – TRANSPARENT otherwise
-                                val bgColor =
-                                    when (dismissState.dismissDirection) {
-                                        DismissDirection.EndToStart -> Color.Red
-                                        else -> Color.Transparent
-                                    }
-
-                                Box(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .background(bgColor)
-                                        // only add padding when showing the red background
-                                        .padding(end = if (bgColor == Color.Red) 20.dp else 0.dp),
-                                    contentAlignment = Alignment.CenterEnd,
-                                ) {
-                                    if (dismissState.dismissDirection == DismissDirection.EndToStart) {
-                                        Icon(
-                                            Icons.Default.Delete,
-                                            contentDescription = "Delete",
-                                            tint = Color.White,
-                                        )
-                                    }
-                                }
-                            },
-                            dismissContent = {
-                                Row(
-                                    Modifier.fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    // show image if you have one
-                                    item.imageUrl?.let { url ->
-                                        AsyncImage(
-                                            model = url,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(40.dp).clip(CircleShape),
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                    }
-                                    Text(item.name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-
-                                        IconButton(onClick = {
-                                            val updated = item.copy(quantity = item.quantity + 1)
-                                            inventoryItems[index] = updated
-                                            userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
-                                        }) { Icon(Icons.Default.Add, contentDescription = "Increase") }
-
-                                        Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
-
-                                        IconButton(onClick = {
-                                            if (item.quantity > 1) {
-                                                val updated = item.copy(quantity = item.quantity - 1)
-                                                inventoryItems[index] = updated
-                                                userId?.let { uid ->
-                                                    FirebaseDatabaseManager.updateInventoryItem(uid, updated)
-                                                }
-                                            } else {
-                                                // 1) Remove locally first (so immediately disappears from UI)
+                                        // 1) Remove locally first (so immediately disappears from UI)
 //                                                inventoryItems.remove(item)
 
-                                                // 2) Tell Firebase to delete
+                                        // 2) Tell Firebase to delete
 //                                                userId?.let { uid ->
 //                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
 //                                                        if (!success) {
@@ -334,26 +357,26 @@ fun InventoryScreen(
 //                                                        }
 //                                                    }
 //                                                }
-                                                pendingDelete = item
-                                            }
-                                        }) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Decrease")
-                                        }
+                                        pendingDelete = item
                                     }
+                                }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Decrease")
                                 }
-                            },
-                        )
-                    }
-                }
-                // only show when an item is pending
-                pendingDelete?.let { itemToDelete ->
-                    AlertDialog(
-                        onDismissRequest = { pendingDelete = null },
-                        title = { Text("Remove “${itemToDelete.name}”?") },
-                        text = { Text("Do you want to put it on your shopping list before deleting?") },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                // 1) add to grocery list
+                            }
+                        }
+                    },
+                )
+            }
+        }
+        // only show when an item is pending
+        pendingDelete?.let { itemToDelete ->
+            AlertDialog(
+                onDismissRequest = { pendingDelete = null },
+                title = { Text("Remove “${itemToDelete.name}”?") },
+                text = { Text("Do you want to put it on your shopping list before deleting?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        // 1) add to grocery list
 //                                FirebaseDatabaseManager.addGroceryListItem(
 //                                    userId!!,
 //                                    GroceryItem(
@@ -364,37 +387,37 @@ fun InventoryScreen(
 //                                        upc = itemToDelete.upc,
 //                                    ),
 //                                )
-                                // 2) delete from inventory
-                                FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { success, _ ->
-                                    if (!success) Log.e("InventoryScreen", "delete failed")
-                                }
-                                // 3) navigate to your AddItemScreen, passing fields as parameters
-                                navController.navigate(
-                                    "add_item?" +
-                                        "productName=${Uri.encode(itemToDelete.name)}" +
-                                        "&productUpc=${Uri.encode(itemToDelete.upc ?: "")}" +
-                                        "&productPrice=" + // leave blank or supply default
-                                        "&productImageUri=", // leave blank or supply default
-                                )
+                        // 2) delete from inventory
+                        FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { success, _ ->
+                            if (!success) Log.e("InventoryScreen", "delete failed")
+                        }
+                        // 3) navigate to your AddItemScreen, passing fields as parameters
+                        navController.navigate(
+                            "add_item?" +
+                                "productName=${Uri.encode(itemToDelete.name)}" +
+                                "&productUpc=${Uri.encode(itemToDelete.upc ?: "")}" +
+                                "&productPrice=" + // leave blank or supply default
+                                "&productImageUri=", // leave blank or supply default
+                        )
 
-                                pendingDelete = null
-                            }) {
-                                Text("Yes")
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = {
-                                // just delete without adding to list
-                                FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { _, _ -> }
-                                pendingDelete = null
-                            }) {
-                                Text("No")
-                            }
-                        },
-                    )
-                }
-            }
-       // }
+                        pendingDelete = null
+                    }) {
+                        Text("Yes")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        // just delete without adding to list
+                        FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { _, _ -> }
+                        pendingDelete = null
+                    }) {
+                        Text("No")
+                    }
+                },
+            )
+        }
+    }
+    // }
 
 //        WindowWidthSizeClass.EXPANDED -> {
 //            Row(
@@ -446,7 +469,7 @@ fun InventoryScreen(
 //                            }
 //                        }
 //                    }
-//// lazy Column for lists
+// // lazy Column for lists
 //                    @OptIn(ExperimentalMaterialApi::class)
 //                    LazyColumn {
 //                        itemsIndexed(inventoryItems, key = { _, item -> item.id!! }) { index, item ->
@@ -546,5 +569,5 @@ fun InventoryScreen(
 //                }
 //            }
 //        }
-    //}
+    // }
 }

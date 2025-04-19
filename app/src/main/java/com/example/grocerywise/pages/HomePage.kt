@@ -133,6 +133,10 @@ fun HomePage(
                     authViewModel = authViewModel,
                 )
             }
+
+            composable("recipe") {
+                Recipe()
+            }
             composable(
                 route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",
                 arguments =

@@ -11,6 +11,7 @@ import com.example.grocerywise.BuildConfig
 import com.example.grocerywise.pages.AddItemScreen
 import com.example.grocerywise.pages.HomePage
 import com.example.grocerywise.pages.LoginPage
+import com.example.grocerywise.pages.Recipe
 import com.example.grocerywise.pages.SignupPage
 import com.google.firebase.Firebase
 import com.google.firebase.database.database
@@ -40,6 +41,9 @@ fun AppNavigation(
         }
         composable("home") {
             HomePage(modifier, navController, authViewModel)
+        }
+        composable("recipe") {
+            Recipe()
         }
 
         // 匹配 HomePage 和 getProductDetails 中的跳转

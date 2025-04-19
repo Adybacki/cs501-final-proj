@@ -11,7 +11,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,7 +29,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.window.core.layout.WindowWidthSizeClass
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieAnimatable
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
@@ -43,19 +45,48 @@ fun LoginPage(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
+//    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
+    var hit by remember { mutableStateOf(false) }
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
+    val loginAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/signin.json"))
+    val Animatable = rememberLottieAnimatable()
 
-    LaunchedEffect(authState.value) {
+    LaunchedEffect(authState.value, loginAni) {
         when (authState.value) {
-            is AuthState.Authenticated -> navController.navigate("home")
+            is AuthState.Authenticated -> {
+                if (loginAni != null) {
+                    Animatable.animate(
+                        composition = loginAni,
+                        initialProgress = 0.4f,
+                        speed = 1.5f,
+                        iterations = 1,
+                    )
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            }
             is AuthState.Error -> Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
             else -> Unit
         }
     }
-   //when (info) {
-       // WindowWidthSizeClass.COMPACT -> {
+    // when (info) {
+    // WindowWidthSizeClass.COMPACT -> {
+    when (authState.value) {
+        AuthState.Authenticated -> {
+            Column(
+                modifier = Modifier.fillMaxSize(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                LottieAnimation(
+                    composition = loginAni,
+                    progress = { Animatable.progress },
+                )
+            }
+        }
+        AuthState.Unauthenticated ->
             Column(
                 modifier =
                     modifier
@@ -107,6 +138,7 @@ fun LoginPage(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(onClick = {
+                    hit = true
                     authViewModel.login(email, password)
                 }, enabled = authState.value != AuthState.Loading && (password != "" && email != "")) {
                     Text("Login")
@@ -118,7 +150,11 @@ fun LoginPage(
                     navController.navigate("signup")
                 }) { Text("Don't have an account? Sign up here") }
             }
-        //}
+        else -> {
+        }
+    }
+
+    // }
 
 //        WindowWidthSizeClass.EXPANDED -> {
 //            Column(
@@ -178,5 +214,5 @@ fun LoginPage(
 //                }) { Text("Don't have an account? Sign up here") }
 //            }
 //        }
-    //}
+    // }
 }
