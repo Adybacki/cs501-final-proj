@@ -160,7 +160,7 @@ fun HomePage(
                     ),
             ) { backStackEntry ->
                 AddItemScreen(
-                    navController,
+                    navigationController,
                     productName = backStackEntry.arguments?.getString("productName"),
                     productUpc = backStackEntry.arguments?.getString("productUpc"),
                     productPrice = backStackEntry.arguments?.getString("productPrice"),
