@@ -49,7 +49,7 @@ fun LoginPage(
     var hit by remember { mutableStateOf(false) }
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
-    val loginAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/login.json"))
+    val loginAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/signin.json"))
     val Animatable = rememberLottieAnimatable()
 
     LaunchedEffect(authState.value, loginAni) {
@@ -58,7 +58,8 @@ fun LoginPage(
                 if (loginAni != null) {
                     Animatable.animate(
                         composition = loginAni,
-                        initialProgress = 0f,
+                        initialProgress = 0.4f,
+                        speed = 1.5f,
                         iterations = 1,
                     )
                     navController.navigate("home") {
@@ -150,7 +151,6 @@ fun LoginPage(
                 }) { Text("Don't have an account? Sign up here") }
             }
         else -> {
-            Column { Text("Loading") }
         }
     }
 
