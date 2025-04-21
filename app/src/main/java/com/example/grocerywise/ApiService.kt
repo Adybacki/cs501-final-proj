@@ -14,9 +14,8 @@ data class ProductLookupRequest(
     val upc: String,
 )
 
-data class ctgbodyRequest(
-    val upc: String?,
-    val name: String,
+data class ClassifyRequestBody(
+    val title: String,
 )
 
 // data class IgRequest(val upc:String, val name: String? )
@@ -33,31 +32,32 @@ interface ApiService {
 
 interface Categorization {
     @Headers("Content-Type: application/json")
-    @POST()
-    fun getIg(
-        @Body requestBody: ctgbodyRequest,
+    @POST("food/products/classify")
+    suspend fun getIg(
+        @Body requestBody: ClassifyRequestBody,
         @Query("apiKey") apikey: String,
-    ): Call<CtgResponse>
+    ): CtgResponse
 }
 
 // Singleton object to provide Retrofit API client
 object ApiClient {
     private const val BASE_URL = "https://api.upcitemdb.com/" // Base URL for GitHub's API
-    private const val category_url = "https://api.spoonacular.com/food/products/classify" // for fetching Ingredients
+    private const val Category_url = "https://api.spoonacular.com/" // for fetching Ingredients
     private val moshi =
         Moshi
             .Builder()
             .add(KotlinJsonAdapterFactory()) // Moshi adapter for Kotlin
             .build()
-    private val igntsRetrofit: Retrofit =
+    private val ctgRetrofit: Retrofit =
         Retrofit
             .Builder()
-            .baseUrl(category_url)
+            .baseUrl(Category_url)
             .addConverterFactory(
                 MoshiConverterFactory.create(
                     moshi,
                 ),
             ).build()
+
     private val retrofit: Retrofit =
         Retrofit
             .Builder()
@@ -66,5 +66,5 @@ object ApiClient {
             .build()
 
     val apiService: ApiService = retrofit.create(ApiService::class.java)
-    val ingService: Categorization = retrofit.create(Categorization::class.java)
+    val ctgService: Categorization = ctgRetrofit.create(Categorization::class.java)
 }

@@ -1,6 +1,8 @@
 package com.example.grocerywise.pages
 
 import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -23,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,18 +39,17 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.example.grocerywise.ApiClient
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.BuildConfig
+import com.example.grocerywise.ClassifyRequestBody
+import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
-import com.example.grocerywise.data.FirebaseDatabaseManager
-import com.example.grocerywise.models.Ingredients
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Recipe(
     navController: NavController,
@@ -58,28 +59,22 @@ fun Recipe(
     var searchVal by remember { mutableStateOf("") }
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val categorization: MutableList<String> = remember { mutableStateListOf() }
-
-    LaunchedEffect(userId) {
+    val activity = LocalActivity.current as ComponentActivity
+    val inventoryViewModel: InventoryViewModel = viewModel(viewModelStoreOwner = activity)
+    val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
+    val apiKey = BuildConfig.ApiKey
+    LaunchedEffect(userId, inventoryItem) {
         if (userId != null) {
-            val listener =
-                object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        categorization.clear()
-                        snapshot.children.forEach { each ->
-                            val igrdnts = each.getValue(Ingredients::class.java)
-                            if (igrdnts != null) {
-                                ingredients.add(igrdnts)
-                            }
-                        }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        Log.e("InventoryScreen", "Data listener error: ${error.message}")
-                    }
-                }
-            FirebaseDatabaseManager.listenIngredients(userId, listener)
+            inventoryItem.listIterator().forEach { item ->
+                val itemName = item.name
+//                val upc = item.upc
+//                Log.i("fwerfwqa", "{\"title\":\"${itemName}\"}")
+                val requestBody = ClassifyRequestBody(title = itemName)
+                val catgoryname = ApiClient.ctgService.getIg(requestBody = requestBody, apikey = apiKey)
+                Log.i("category", itemName)
+                Log.i("cat", catgoryname!!.category.toString())
+            }
         }
-        Log.i("ingredients", ingredients.joinToString())
     }
 
     when (info) {

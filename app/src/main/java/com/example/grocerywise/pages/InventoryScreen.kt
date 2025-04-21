@@ -2,8 +2,6 @@ package com.example.grocerywise.pages
 
 import android.net.Uri
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -39,7 +37,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,7 +53,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
@@ -65,7 +61,6 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthViewModel
-import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.InventoryItem
@@ -134,9 +129,7 @@ fun InventoryScreen(
         iterations = LottieConstants.IterateForever,
     )
     // List to store inventory items from Firebase.
-    val activity = LocalActivity.current as ComponentActivity
-    val inventoryViewModel: InventoryViewModel = viewModel(viewModelStoreOwner = activity)
-    val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
+
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
 //    Log.i("inventoritem: ", inventoryItems.joinToString())
     // NEW: which item is awaiting the “add to shopping list?” prompt?
