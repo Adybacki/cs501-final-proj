@@ -2,6 +2,8 @@ package com.example.grocerywise.pages
 
 import android.net.Uri
 import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -37,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
@@ -61,6 +65,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.InventoryItem
@@ -129,8 +134,11 @@ fun InventoryScreen(
         iterations = LottieConstants.IterateForever,
     )
     // List to store inventory items from Firebase.
+    val activity = LocalActivity.current as ComponentActivity
+    val inventoryViewModel: InventoryViewModel = viewModel(viewModelStoreOwner = activity)
+    val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
-
+//    Log.i("inventoritem: ", inventoryItems.joinToString())
     // NEW: which item is awaiting the “add to shopping list?” prompt?
     var pendingDelete by remember { mutableStateOf<InventoryItem?>(null) }
     val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
@@ -145,6 +153,15 @@ fun InventoryScreen(
                         // Iterate through each child in the inventory node.
                         snapshot.children.forEach { dataSnap ->
                             val item = dataSnap.getValue(InventoryItem::class.java)
+                            //                            val category: DataSnapshot = dataSnap.child("category") // finding the category data
+                            //                            if (category.exists()) {
+                            //                                val ctgry = category.getValue(String::class.java)
+                            //
+                            //                                if (ctgry != null) {
+                            //                                    Log.i("current catgory", ctgry)
+                            //                                } // safely deserilaztion
+                            //                            }
+
                             if (item != null) {
                                 inventoryItems.add(item)
                             }

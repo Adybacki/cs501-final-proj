@@ -43,7 +43,7 @@ fun AppNavigation(
             HomePage(modifier, navController, authViewModel)
         }
         composable("recipe") {
-            Recipe()
+            Recipe(navController, authViewModel)
         }
 
         // 匹配 HomePage 和 getProductDetails 中的跳转

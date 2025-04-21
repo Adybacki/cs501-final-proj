@@ -12,6 +12,8 @@ object FirebaseDatabaseManager {
     // Get a reference to the current user's inventory node.
     private fun getUserInventoryRef(userId: String) = database.getReference("users").child(userId).child("inventory")
 
+    private fun getUserIngredientsRef(userId: String) = database.getReference("users").child(userId).child("ingredients")
+
     // Add an inventory item; uses push() to generate a unique key.
     fun addInventoryItem(
         userId: String,
@@ -40,7 +42,9 @@ object FirebaseDatabaseManager {
         itemId: String,
         onComplete: ((Boolean, Exception?) -> Unit)? = null,
     ) {
-        getUserInventoryRef(userId).child(itemId).removeValue()
+        getUserInventoryRef(userId)
+            .child(itemId)
+            .removeValue()
             .addOnCompleteListener { task ->
                 onComplete?.invoke(task.isSuccessful, task.exception)
             }
@@ -54,7 +58,15 @@ object FirebaseDatabaseManager {
         getUserInventoryRef(userId).addValueEventListener(listener)
     }
 
+    fun listenIngredients(
+        userId: String,
+        listener: ValueEventListener,
+    ) {
+        getUserIngredientsRef(userId).addValueEventListener(listener)
+    }
+
     private fun getUserGroceryListRef(userId: String) = database.getReference("users").child(userId).child("groceryList")
+
     // Add a grocery list item; uses push() to generate a unique key.
     fun addGroceryListItem(
         userId: String,
@@ -82,7 +94,9 @@ object FirebaseDatabaseManager {
         itemId: String,
         onComplete: ((Boolean, Exception?) -> Unit)? = null,
     ) {
-        getUserGroceryListRef(userId).child(itemId).removeValue()
+        getUserGroceryListRef(userId)
+            .child(itemId)
+            .removeValue()
             .addOnCompleteListener { task ->
                 onComplete?.invoke(task.isSuccessful, task.exception)
             }

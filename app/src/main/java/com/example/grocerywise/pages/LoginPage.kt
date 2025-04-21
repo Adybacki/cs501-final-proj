@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieClipSpec
 import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieAnimatable
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthState
@@ -58,13 +60,23 @@ fun LoginPage(
                 if (loginAni != null) {
                     Animatable.animate(
                         composition = loginAni,
-                        initialProgress = 0.4f,
+                        clipSpec = LottieClipSpec.Progress(0.4f, 0.8f),
                         speed = 1.5f,
                         iterations = 1,
                     )
                     navController.navigate("home") {
                         popUpTo("login") { inclusive = true }
                     }
+                }
+            }
+            is AuthState.Loading -> {
+                if (loginAni != null) {
+                    Animatable.animate(
+                        clipSpec = LottieClipSpec.Progress(0f, 0.4f),
+                        composition = loginAni,
+                        speed = 1.5f,
+                        iterations = LottieConstants.IterateForever,
+                    )
                 }
             }
             is AuthState.Error -> Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
@@ -151,6 +163,16 @@ fun LoginPage(
                 }) { Text("Don't have an account? Sign up here") }
             }
         else -> {
+            Column(
+                modifier = Modifier.fillMaxSize(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                LottieAnimation(
+                    composition = loginAni,
+                    progress = { Animatable.progress },
+                )
+            }
         }
     }
 
