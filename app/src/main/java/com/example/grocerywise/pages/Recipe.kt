@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -37,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,6 +50,7 @@ import com.example.grocerywise.BuildConfig
 import com.example.grocerywise.ClassifyRequestBody
 import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
+import com.example.grocerywise.RecipeResponse
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -62,18 +65,30 @@ fun Recipe(
     val activity = LocalActivity.current as ComponentActivity
     val inventoryViewModel: InventoryViewModel = viewModel(viewModelStoreOwner = activity)
     val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
+    var fetched by remember { mutableStateOf(false) }
+    val recipeList = remember { mutableStateListOf<RecipeResponse>() }
     val apiKey = BuildConfig.ApiKey
     LaunchedEffect(userId, inventoryItem) {
         if (userId != null) {
             inventoryItem.listIterator().forEach { item ->
                 val itemName = item.name
 //                val upc = item.upc
-//                Log.i("fwerfwqa", "{\"title\":\"${itemName}\"}")
+// get the classification based
                 val requestBody = ClassifyRequestBody(title = itemName)
                 val catgoryname = ApiClient.ctgService.getIg(requestBody = requestBody, apikey = apiKey)
                 Log.i("category", itemName)
-                Log.i("cat", catgoryname!!.category.toString())
+                val ctgryName = catgoryname.category
+                if (catgoryname.category != "unknown") {
+                    categorization.add(ctgryName)
+                }
             }
+            // get the recipe
+            var fetchString = categorization.joinToString(separator = ",+")
+            Log.i("fetched String", fetchString)
+            val rcpResponse = ApiClient.rcpService.getRecipe(apikey = apiKey, ingredients = fetchString, number = 10)
+            Log.i("rcpResponseList:", rcpResponse.toString())
+
+            fetched = true
         }
     }
 
@@ -84,7 +99,13 @@ fun Recipe(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Recipe Finder", fontFamily = FontFamily(Font(R.font.defaultfont)), fontSize = 30.sp, color = Color(0xFF101210))
+                Text(
+                    "Recipe Finder",
+                    fontWeight = FontWeight.W600,
+                    fontFamily = FontFamily(Font(R.font.defaultfont)),
+                    fontSize = 30.sp,
+                    color = Color(0xFF101210),
+                )
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(1f).height(60.dp),
@@ -140,16 +161,18 @@ fun Recipe(
                     Button(
                         onClick = {
                         },
+                        contentPadding = PaddingValues(0.dp),
                         modifier =
                             Modifier.fillMaxWidth().height(
                                 40.dp,
                             ),
+                        shape = RoundedCornerShape(15.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF022e2d)),
                     ) {
                         Text(
                             "Search",
                             softWrap = true,
-                            fontSize = 18.sp,
+                            fontSize = 14.sp,
                             fontFamily = FontFamily(Font(R.font.defaultfont)),
                             color = Color.LightGray,
                         )

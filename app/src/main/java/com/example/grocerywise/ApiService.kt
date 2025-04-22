@@ -6,6 +6,7 @@ import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Query
@@ -20,6 +21,17 @@ data class ClassifyRequestBody(
 
 // data class IgRequest(val upc:String, val name: String? )
 // Retrofit API service interface
+
+interface RecipeService {
+    @Headers("Content-Type: application/json")
+    @GET("recipes/findByIngredients")
+    suspend fun getRecipe(
+        @Query("ingredients") ingredients: String,
+        @Query("apiKey")apikey: String,
+        @Query("number") number: Int,
+    ): List<RecipeResponse>
+}
+
 interface ApiService {
     @Headers(
         "Content-Type: application/json",
@@ -57,6 +69,13 @@ object ApiClient {
                     moshi,
                 ),
             ).build()
+    private val rcpRetrofit: Retrofit =
+        Retrofit
+            .Builder()
+            .baseUrl(
+                Category_url,
+            ).addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
 
     private val retrofit: Retrofit =
         Retrofit
@@ -64,7 +83,7 @@ object ApiClient {
             .baseUrl(BASE_URL)
             .addConverterFactory(MoshiConverterFactory.create(moshi)) // Use Moshi for JSON parsing
             .build()
-
+    val rcpService: RecipeService = rcpRetrofit.create(RecipeService::class.java)
     val apiService: ApiService = retrofit.create(ApiService::class.java)
     val ctgService: Categorization = ctgRetrofit.create(Categorization::class.java)
 }
