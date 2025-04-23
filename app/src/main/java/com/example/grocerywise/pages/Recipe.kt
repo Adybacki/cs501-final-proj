@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.ApiClient
 import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.BuildConfig
@@ -68,6 +70,9 @@ fun Recipe(
     var fetched by remember { mutableStateOf(false) }
     val recipeList = remember { mutableStateListOf<RecipeResponse>() }
     val apiKey = BuildConfig.ApiKey
+
+    val loading by rememberLottieComposition(LottieCompositionSpec.Asset("loading.json"))
+
     LaunchedEffect(userId, inventoryItem) {
         if (userId != null) {
             inventoryItem.listIterator().forEach { item ->
@@ -82,13 +87,12 @@ fun Recipe(
                     categorization.add(ctgryName)
                 }
             }
+
             // get the recipe
-            var fetchString = categorization.joinToString(separator = ",+")
+            val fetchString = categorization.joinToString(separator = ",+")
             Log.i("fetched String", fetchString)
             val rcpResponse = ApiClient.rcpService.getRecipe(apikey = apiKey, ingredients = fetchString, number = 10)
             Log.i("rcpResponseList:", rcpResponse.toString())
-
-            fetched = true
         }
     }
 

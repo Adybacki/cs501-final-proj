@@ -50,10 +50,12 @@ fun LoginPage(
 //    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
     var hit by remember { mutableStateOf(false) }
     val authState = authViewModel.authState.observeAsState()
+
     val context = LocalContext.current
     val loginAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/signin.json"))
     val Animatable = rememberLottieAnimatable()
-
+    val rejection by rememberLottieComposition(LottieCompositionSpec.Asset("animations/reject.json"))
+    var rejected by remember { mutableStateOf(false) }
     LaunchedEffect(authState.value, loginAni) {
         when (authState.value) {
             is AuthState.Authenticated -> {
@@ -79,14 +81,30 @@ fun LoginPage(
                     )
                 }
             }
-            is AuthState.Error -> Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
-            else -> Unit
+            is AuthState.Error -> {
+                if (rejection != null) {
+                    Animatable.animate(
+                        clipSpec = LottieClipSpec.Progress(0f, 0.8f),
+                        composition = rejection,
+                        speed = 1.5f,
+                        iterations = 1,
+                    )
+                }
+                Toast
+                    .makeText(
+                        context,
+                        (authState.value as AuthState.Error).message,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                authViewModel.signout()
+            } else -> Unit
         }
     }
     // when (info) {
     // WindowWidthSizeClass.COMPACT -> {
     when (authState.value) {
-        AuthState.Authenticated -> {
+        is AuthState.Authenticated -> {
             Column(
                 modifier = Modifier.fillMaxSize(1f),
                 verticalArrangement = Arrangement.Center,
@@ -98,7 +116,7 @@ fun LoginPage(
                 )
             }
         }
-        AuthState.Unauthenticated ->
+        is AuthState.Unauthenticated ->
             Column(
                 modifier =
                     modifier
@@ -162,6 +180,19 @@ fun LoginPage(
                     navController.navigate("signup")
                 }) { Text("Don't have an account? Sign up here") }
             }
+
+        is AuthState.Error -> {
+            Column(
+                modifier = Modifier.fillMaxSize(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                LottieAnimation(
+                    composition = rejection,
+                    progress = { Animatable.progress },
+                )
+            }
+        }
         else -> {
             Column(
                 modifier = Modifier.fillMaxSize(1f),
