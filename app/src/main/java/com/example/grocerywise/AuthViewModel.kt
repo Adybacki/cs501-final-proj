@@ -1,5 +1,6 @@
 package com.example.grocerywise
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -79,6 +80,24 @@ class AuthViewModel : ViewModel() {
         auth.signOut()
         _authState.value = AuthState.Unauthenticated
     }
+
+    /**
+     * Send a password reset email to [email].
+     * Calls [onResult] with (success, errorMessage).
+     */
+    fun resetPassword(email: String, onResult: (Boolean, String?) -> Unit) {
+        auth.sendPasswordResetEmail(email)
+            .addOnSuccessListener {
+                Log.d("AuthVM", "✅ sendPasswordResetEmail: SUCCESS")
+                onResult(true, null)
+            }
+            .addOnFailureListener { e ->
+                Log.e("AuthVM", "❌ sendPasswordResetEmail: FAILED — ${e.message}")
+                onResult(false, e.message)
+            }
+    }
+
+
 }
 
 sealed class AuthState {
