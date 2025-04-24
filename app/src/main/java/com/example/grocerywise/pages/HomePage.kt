@@ -135,7 +135,11 @@ fun HomePage(
             }
 
             composable("recipe") {
-                Recipe()
+                Recipe(
+                    navController = navigationController,
+                    authViewModel = authViewModel
+
+                )
             }
             composable(
                 route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",

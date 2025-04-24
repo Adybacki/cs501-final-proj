@@ -171,6 +171,7 @@ fun AddItemScreen(
                                     ).show()
                             }
                         }
+                        // parse the data and added to the FireDatabase
                     } else {
                         Toast
                             .makeText(

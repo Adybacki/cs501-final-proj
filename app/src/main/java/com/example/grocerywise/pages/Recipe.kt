@@ -1,23 +1,33 @@
 package com.example.grocerywise.pages
 
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,28 +38,82 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.grocerywise.ApiClient
+import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.BuildConfig
+import com.example.grocerywise.ClassifyRequestBody
+import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
+import com.example.grocerywise.RecipeResponse
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun Recipe() {
+fun Recipe(
+    navController: NavController,
+    authViewModel: AuthViewModel,
+) {
     val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
     var searchVal by remember { mutableStateOf("") }
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    val categorization: MutableList<String> = remember { mutableStateListOf() }
+    val activity = LocalActivity.current as ComponentActivity
+    val inventoryViewModel: InventoryViewModel = viewModel(viewModelStoreOwner = activity)
+    val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
+    var fetched by remember { mutableStateOf(false) }
+    val recipeList = remember { mutableStateListOf<RecipeResponse>() }
+    val apiKey = BuildConfig.ApiKey
+
+    val loading by rememberLottieComposition(LottieCompositionSpec.Asset("loading.json"))
+
+    LaunchedEffect(userId, inventoryItem) {
+        if (userId != null) {
+            inventoryItem.listIterator().forEach { item ->
+                val itemName = item.name
+//                val upc = item.upc
+// get the classification based
+                val requestBody = ClassifyRequestBody(title = itemName)
+                val catgoryname = ApiClient.ctgService.getIg(requestBody = requestBody, apikey = apiKey)
+                Log.i("category", itemName)
+                val ctgryName = catgoryname.category
+                if (catgoryname.category != "unknown") {
+                    categorization.add(ctgryName)
+                }
+            }
+
+            // get the recipe
+            val fetchString = categorization.joinToString(separator = ",+")
+            Log.i("fetched String", fetchString)
+            val rcpResponse = ApiClient.rcpService.getRecipe(apikey = apiKey, ingredients = fetchString, number = 10)
+            Log.i("rcpResponseList:", rcpResponse.toString())
+        }
+    }
 
     when (info) {
         WindowWidthSizeClass.COMPACT -> {
             Column(
-                modifier = Modifier.fillMaxSize(1f),
-                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize(1f).padding(vertical = 20.dp, horizontal = 5.dp),
+                verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Recipe Finder", fontFamily = FontFamily(Font(R.font.defaultfont)), fontSize = 30.sp, color = Color(0xFF101210))
+                Text(
+                    "Recipe Finder",
+                    fontWeight = FontWeight.W600,
+                    fontFamily = FontFamily(Font(R.font.defaultfont)),
+                    fontSize = 30.sp,
+                    color = Color(0xFF101210),
+                )
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(1f).height(60.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(15.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     OutlinedTextField(
@@ -98,7 +162,30 @@ fun Recipe() {
                         },
                         singleLine = true,
                     )
-                    Button(onClick = { }, modifier = Modifier.fillMaxWidth().fillMaxHeight()) { Text("Search", softWrap = true) }
+                    Button(
+                        onClick = {
+                        },
+                        contentPadding = PaddingValues(0.dp),
+                        modifier =
+                            Modifier.fillMaxWidth().height(
+                                40.dp,
+                            ),
+                        shape = RoundedCornerShape(15.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF022e2d)),
+                    ) {
+                        Text(
+                            "Search",
+                            softWrap = true,
+                            fontSize = 14.sp,
+                            fontFamily = FontFamily(Font(R.font.defaultfont)),
+                            color = Color.LightGray,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                ) {
                 }
             }
         }

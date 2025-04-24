@@ -16,7 +16,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "DB", "\"https://grocerywise-cs501-default-rtdb.firebaseio.com/\"")
-
+        buildConfigField("String", "ApiKey", "\"768eecd3e3a741f2853cc096a9f82bab\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -71,6 +71,9 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.adaptive.android)
+    implementation(libs.play.services.base)
+    implementation(libs.play.services.base)
+    implementation(libs.play.services.base)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

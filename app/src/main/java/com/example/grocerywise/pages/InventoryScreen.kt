@@ -129,8 +129,9 @@ fun InventoryScreen(
         iterations = LottieConstants.IterateForever,
     )
     // List to store inventory items from Firebase.
-    val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
 
+    val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
+//    Log.i("inventoritem: ", inventoryItems.joinToString())
     // NEW: which item is awaiting the “add to shopping list?” prompt?
     var pendingDelete by remember { mutableStateOf<InventoryItem?>(null) }
     val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
@@ -145,6 +146,15 @@ fun InventoryScreen(
                         // Iterate through each child in the inventory node.
                         snapshot.children.forEach { dataSnap ->
                             val item = dataSnap.getValue(InventoryItem::class.java)
+                            //                            val category: DataSnapshot = dataSnap.child("category") // finding the category data
+                            //                            if (category.exists()) {
+                            //                                val ctgry = category.getValue(String::class.java)
+                            //
+                            //                                if (ctgry != null) {
+                            //                                    Log.i("current catgory", ctgry)
+                            //                                } // safely deserilaztion
+                            //                            }
+
                             if (item != null) {
                                 inventoryItems.add(item)
                             }
