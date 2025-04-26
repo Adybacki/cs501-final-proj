@@ -121,14 +121,14 @@ fun LoginPage(
                 modifier =
                     modifier
                         .fillMaxSize()
-                        .padding(vertical = 30.dp, horizontal = 10.dp),
+                        .padding(vertical = 30.dp, horizontal = 30.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    "Welcome to Grocery Wise",
-                    fontSize = 30.sp,
-                    fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+                    "Welcome to GroceryWise",
+                    fontSize = 25.sp,
+                    fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
                     fontWeight = FontWeight.W600,
                 )
 
@@ -136,9 +136,9 @@ fun LoginPage(
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = { email = it.take(40) },
                     label = {
-                        Text("Email", fontFamily = FontFamily(Font(resId = R.font.defaultfont)))
+                        Text("Email", fontFamily = FontFamily(Font(resId = R.font.nunito)))
                     },
                     maxLines = 1,
                     colors =
@@ -152,9 +152,9 @@ fun LoginPage(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = { password = it.take(40) },
                     label = {
-                        Text("Password", fontFamily = FontFamily(Font(resId = R.font.defaultfont)))
+                        Text("Password", fontFamily = FontFamily(Font(resId = R.font.nunito)))
                     },
                     maxLines = 1,
                     colors =
