@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
@@ -88,8 +91,26 @@ fun GroceryListScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Grocery List", fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("Grocery List", fontSize = 24.sp, fontWeight = FontWeight.W900, modifier = Modifier.weight(1f), fontFamily = FontFamily(
+                Font(resId = R.font.nunitobold)
+            ),)
             TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(onClick = {
+                groceryItems.forEach { item ->
+                    val updatedItem = item.copy(isChecked = true)
+                    item.isChecked = true
+                    if (userId != null) {
+                        FirebaseDatabaseManager.updateGroceryListItem(userId, updatedItem)
+                    }
+                }
+            }) {
+                Text("Check All Items")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         LazyColumn(modifier = Modifier.weight(1f)) {
@@ -205,35 +226,44 @@ fun GroceryListItem(
     onCheckedChange: (Boolean) -> Unit
 ) {
     var checkboxChecked by remember { mutableStateOf(item.isChecked) }
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 8.dp, horizontal = 12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Checkbox(
-            checked = checkboxChecked,
-            onCheckedChange = { checked ->
-                checkboxChecked = checked
-                item.isChecked = checked
-                onCheckedChange(checked)
-            }
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        if (item.imageUrl != null) {
-            AsyncImage(
-                model = item.imageUrl,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp).clip(CircleShape)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = checkboxChecked,
+                onCheckedChange = { checked ->
+                    checkboxChecked = checked
+                    item.isChecked = checked
+                    onCheckedChange(checked)
+                }
             )
             Spacer(modifier = Modifier.width(8.dp))
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(item.name, fontWeight = FontWeight.SemiBold)
-            Text("Qty: ${item.quantity} · $${"%.2f".format(item.estimatedPrice)}")
-        }
-        IconButton(onClick = onEditClicked) {
-            Icon(Icons.Default.MoreVert, contentDescription = "Edit item")
+            if (item.imageUrl != null) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.name, fontWeight = FontWeight.SemiBold)
+                Text("Qty: ${item.quantity} · $${"%.2f".format(item.estimatedPrice)}")
+            }
+            IconButton(onClick = onEditClicked) {
+                Icon(Icons.Default.MoreVert, contentDescription = "Edit item")
+            }
         }
     }
 }

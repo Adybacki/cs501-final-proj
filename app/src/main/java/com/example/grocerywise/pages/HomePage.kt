@@ -194,7 +194,12 @@ fun getProductDetails(
                     val product = response.body()?.items?.firstOrNull()
 
                     if (product != null) {
-                        val encodedName = Uri.encode(product.title)
+                        val trimmedTitle = if (product.title.length > 30) {
+                            product.title.substring(0, 30)
+                        } else {
+                            product.title
+                        }
+                        val encodedName = Uri.encode(trimmedTitle)
                         val encodedUpc = Uri.encode(product.upc)
                         val encodedImage = Uri.encode(product.images.firstOrNull() ?: "")
                         val prices = product.prices
