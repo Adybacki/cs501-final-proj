@@ -14,7 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,7 +47,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieAnimatable
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.ApiClient
 import com.example.grocerywise.AuthViewModel
@@ -69,11 +75,12 @@ fun Recipe(
     val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
     var fetched by remember { mutableStateOf(false) }
     val recipeList = remember { mutableStateListOf<RecipeResponse>() }
+    val search by remember { mutableStateOf(false) }
     val apiKey = BuildConfig.ApiKey
-
-    val loading by rememberLottieComposition(LottieCompositionSpec.Asset("loading.json"))
-
-    LaunchedEffect(userId, inventoryItem) {
+    var done by remember { mutableStateOf(false) }
+    val loading by rememberLottieComposition(LottieCompositionSpec.Asset("animations/loading.json"))
+    val animatable = rememberLottieAnimatable()
+    LaunchedEffect(userId, inventoryItem, search) {
         if (userId != null) {
             inventoryItem.listIterator().forEach { item ->
                 val itemName = item.name
@@ -93,6 +100,9 @@ fun Recipe(
             Log.i("fetched String", fetchString)
             val rcpResponse = ApiClient.rcpService.getRecipe(apikey = apiKey, ingredients = fetchString, number = 10)
             Log.i("rcpResponseList:", rcpResponse.toString())
+            recipeList.clear()
+            recipeList.addAll(rcpResponse)
+            done = true
         }
     }
 
@@ -183,9 +193,34 @@ fun Recipe(
                     }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-                ) {
+                if (!done) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        LaunchedEffect(loading) {
+                            if (loading != null) {
+                                animatable.animate(
+                                    loading,
+                                    iterations = LottieConstants.IterateForever,
+                                )
+                            }
+                        }
+
+                        LottieAnimation(composition = loading, progress = animatable.progress, modifier = Modifier.size(150.dp))
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                        contentPadding = PaddingValues(horizontal = 3.dp, vertical = 5.dp),
+                        columns = GridCells.Adaptive(minSize = 150.dp),
+                        userScrollEnabled = true,
+                    ) {
+                        items(recipeList) { recipe ->
+                            RecipeCard(Info = recipe)
+                        }
+                    }
                 }
             }
         }
