@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
@@ -29,6 +30,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -197,7 +200,7 @@ fun InventoryScreen(
             Text(
                 text = "Inventory",
                 fontSize = 24.sp,
-                fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+                fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
@@ -255,7 +258,7 @@ fun InventoryScreen(
                     ) {
                         Text(
                             text = name,
-                            fontFamily = FontFamily(Font(resId = R.font.defaultfont)),
+                            fontFamily = FontFamily(Font(resId = R.font.nunito)),
                             fontSize = 10.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(2.dp),
@@ -319,32 +322,49 @@ fun InventoryScreen(
                             }
                         }
                     },
-                    dismissContent = {
+                    dismissContent = { Card (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
                         Row(
                             Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            // show image if you have one
                             item.imageUrl?.let { url ->
                                 AsyncImage(
                                     model = url,
                                     contentDescription = null,
-                                    modifier = Modifier.size(40.dp).clip(CircleShape),
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape),
                                 )
                                 Spacer(Modifier.width(8.dp))
                             }
-                            Text(item.name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                            Text(
+                                item.name,
+                                modifier = Modifier.weight(1f),
+                                fontWeight = FontWeight.Bold
+                            )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = {
                                     val updated = item.copy(quantity = item.quantity + 1)
                                     inventoryItems[index] = updated
                                     userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
-                                }) { Icon(Icons.Default.Add, contentDescription = "Increase") }
+                                }) {
+                                    Icon(Icons.Default.Add, contentDescription = "Increase")
+                                }
 
-                                Text("${item.quantity}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
+                                Text(
+                                    "${item.quantity}",
+                                    fontSize = 20.sp,
+                                    modifier = Modifier.padding(8.dp)
+                                )
 
                                 IconButton(onClick = {
                                     if (item.quantity > 1) {
@@ -354,19 +374,6 @@ fun InventoryScreen(
                                             FirebaseDatabaseManager.updateInventoryItem(uid, updated)
                                         }
                                     } else {
-                                        // 1) Remove locally first (so immediately disappears from UI)
-//                                                inventoryItems.remove(item)
-
-                                        // 2) Tell Firebase to delete
-//                                                userId?.let { uid ->
-//                                                    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-//                                                        if (!success) {
-//                                                            Log.e("InventoryScreen", "Failed to remove ${item.id}, rolling back")
-//                                                            // rollback so the user sees it again
-//                                                            inventoryItems.add(index, item)
-//                                                        }
-//                                                    }
-//                                                }
                                         pendingDelete = item
                                     }
                                 }) {
@@ -374,6 +381,7 @@ fun InventoryScreen(
                                 }
                             }
                         }
+                    }
                     },
                 )
             }
