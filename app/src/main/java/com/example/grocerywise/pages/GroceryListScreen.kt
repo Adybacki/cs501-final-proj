@@ -110,64 +110,90 @@ fun GroceryListScreen(
         }) {
             Text("Check All Items")
         }
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(items = groceryItems, key = { it.id!! }) { item ->
-                val dismissState = rememberDismissState(
-                    confirmStateChange = { state ->
-                        if (state == DismissValue.DismissedToStart) {
-                            FirebaseDatabaseManager.removeGroceryListItem(userId!!, item.id!!) { success, exception ->
-                                if (success) {
-                                    Log.d("GroceryList", "Item removed successfully.")
-                                } else {
-                                    Log.e("GroceryList", "Error removing item: ${exception?.message}")
+
+        if (groceryItems.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Your grocery list is empty!\nAdd items using the + button on the bottom right.",
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(items = groceryItems, key = { it.id!! }) { item ->
+                    val dismissState = rememberDismissState(
+                        confirmStateChange = { state ->
+                            if (state == DismissValue.DismissedToStart) {
+                                FirebaseDatabaseManager.removeGroceryListItem(
+                                    userId!!,
+                                    item.id!!
+                                ) { success, exception ->
+                                    if (success) {
+                                        Log.d("GroceryList", "Item removed successfully.")
+                                    } else {
+                                        Log.e(
+                                            "GroceryList",
+                                            "Error removing item: ${exception?.message}"
+                                        )
+                                    }
+                                }
+                                true
+                            } else false
+                        }
+                    )
+
+                    //Swipe to remove item feature
+                    androidx.compose.material.SwipeToDismiss(
+                        state = dismissState,
+                        directions = setOf(DismissDirection.EndToStart),
+                        background = {
+                            val color = when (dismissState.dismissDirection) {
+                                DismissDirection.EndToStart -> Color.Red
+                                else -> Color.Transparent
+                            }
+
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(end = 20.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = null,
+                                        tint = Color.White
+                                    )
                                 }
                             }
-                            true
-                        } else false
-                    }
-                )
-
-                //Swipe to remove item feature
-                androidx.compose.material.SwipeToDismiss(
-                    state = dismissState,
-                    directions = setOf(DismissDirection.EndToStart),
-                    background = {
-                        val color = when (dismissState.dismissDirection) {
-                            DismissDirection.EndToStart -> Color.Red
-                            else -> Color.Transparent
-                        }
-
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(color)
-                                .padding(end = 20.dp),
-                            contentAlignment = Alignment.CenterEnd
-                        ) {
-                            if (dismissState.dismissDirection == DismissDirection.EndToStart) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = null,
-                                    tint = Color.White
+                        },
+                        dismissContent = {
+                            if (userId != null) {
+                                GroceryListItem(
+                                    item = item,
+                                    onEditClicked = {
+                                        showEditDialog.value = item
+                                    },
+                                    onCheckedChange = { checked ->
+                                        val updatedItem = item.copy(isChecked = checked)
+                                        FirebaseDatabaseManager.updateGroceryListItem(
+                                            userId,
+                                            updatedItem
+                                        )
+                                    }
                                 )
                             }
                         }
-                    },
-                    dismissContent = {
-                        if (userId != null) {
-                            GroceryListItem(
-                                item = item,
-                                onEditClicked = {
-                                    showEditDialog.value = item
-                                },
-                                onCheckedChange = { checked ->
-                                    val updatedItem = item.copy(isChecked = checked)
-                                    FirebaseDatabaseManager.updateGroceryListItem(userId, updatedItem)
-                                }
-                            )
-                        }
-                    }
-                )
+                    )
+                }
             }
         }
 

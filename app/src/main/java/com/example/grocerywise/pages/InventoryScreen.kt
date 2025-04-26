@@ -267,123 +267,153 @@ fun InventoryScreen(
                 }
             }
         }
-        // List the inventory items with update buttons.
-        LazyColumn {
-            itemsIndexed(inventoryItems, key = { _, item -> item.id!! }) { index, item ->
-                val dismissState =
-                    rememberDismissState(
-                        // leave initialValue at default Idle
-                        confirmStateChange = { state: DismissValue ->
-                            if (state == DismissValue.DismissedToStart) {
-                                // 1. Remove locally
-                                // inventoryItems.remove(item)
-                                // 2. Tell Firebase to delete
-                                // userId?.let { uid ->
-                                //    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                //        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
-                                //    }
-                                // }
-                                // ask the user if they want to add it to the shopping list:
-                                pendingDelete = item
-                                true
-                            } else {
-                                false
+
+        if (inventoryItems.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Your inventory is empty!\nAdd items using the + button on the bottom right.",
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        } else {
+            // List the inventory items with update buttons.
+            LazyColumn {
+                itemsIndexed(inventoryItems, key = { _, item -> item.id!! }) { index, item ->
+                    val dismissState =
+                        rememberDismissState(
+                            // leave initialValue at default Idle
+                            confirmStateChange = { state: DismissValue ->
+                                if (state == DismissValue.DismissedToStart) {
+                                    // 1. Remove locally
+                                    // inventoryItems.remove(item)
+                                    // 2. Tell Firebase to delete
+                                    // userId?.let { uid ->
+                                    //    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+                                    //        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
+                                    //    }
+                                    // }
+                                    // ask the user if they want to add it to the shopping list:
+                                    pendingDelete = item
+                                    true
+                                } else {
+                                    false
+                                }
+                            },
+                        )
+
+                    SwipeToDismiss(
+                        state = dismissState,
+                        directions = setOf(DismissDirection.EndToStart),
+                        background = {
+                            // Determine the background color:
+                            // – RED when the user is actively swiping to the left (EndToStart)
+                            // – TRANSPARENT otherwise
+                            val bgColor =
+                                when (dismissState.dismissDirection) {
+                                    DismissDirection.EndToStart -> Color.Red
+                                    else -> Color.Transparent
+                                }
+
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(bgColor)
+                                    // only add padding when showing the red background
+                                    .padding(end = if (bgColor == Color.Red) 20.dp else 0.dp),
+                                contentAlignment = Alignment.CenterEnd,
+                            ) {
+                                if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = Color.White,
+                                    )
+                                }
+                            }
+                        },
+                        dismissContent = {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    item.imageUrl?.let { url ->
+                                        AsyncImage(
+                                            model = url,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape),
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                    }
+                                    Text(
+                                        item.name,
+                                        modifier = Modifier.weight(1f),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        IconButton(onClick = {
+                                            val updated = item.copy(quantity = item.quantity + 1)
+                                            inventoryItems[index] = updated
+                                            userId?.let {
+                                                FirebaseDatabaseManager.updateInventoryItem(
+                                                    it,
+                                                    updated
+                                                )
+                                            }
+                                        }) {
+                                            Icon(Icons.Default.Add, contentDescription = "Increase")
+                                        }
+
+                                        Text(
+                                            "${item.quantity}",
+                                            fontSize = 20.sp,
+                                            modifier = Modifier.padding(8.dp)
+                                        )
+
+                                        IconButton(onClick = {
+                                            if (item.quantity > 1) {
+                                                val updated =
+                                                    item.copy(quantity = item.quantity - 1)
+                                                inventoryItems[index] = updated
+                                                userId?.let { uid ->
+                                                    FirebaseDatabaseManager.updateInventoryItem(
+                                                        uid,
+                                                        updated
+                                                    )
+                                                }
+                                            } else {
+                                                pendingDelete = item
+                                            }
+                                        }) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = "Decrease"
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         },
                     )
-
-                SwipeToDismiss(
-                    state = dismissState,
-                    directions = setOf(DismissDirection.EndToStart),
-                    background = {
-                        // Determine the background color:
-                        // – RED when the user is actively swiping to the left (EndToStart)
-                        // – TRANSPARENT otherwise
-                        val bgColor =
-                            when (dismissState.dismissDirection) {
-                                DismissDirection.EndToStart -> Color.Red
-                                else -> Color.Transparent
-                            }
-
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(bgColor)
-                                // only add padding when showing the red background
-                                .padding(end = if (bgColor == Color.Red) 20.dp else 0.dp),
-                            contentAlignment = Alignment.CenterEnd,
-                        ) {
-                            if (dismissState.dismissDirection == DismissDirection.EndToStart) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Delete",
-                                    tint = Color.White,
-                                )
-                            }
-                        }
-                    },
-                    dismissContent = { Card (
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            item.imageUrl?.let { url ->
-                                AsyncImage(
-                                    model = url,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape),
-                                )
-                                Spacer(Modifier.width(8.dp))
-                            }
-                            Text(
-                                item.name,
-                                modifier = Modifier.weight(1f),
-                                fontWeight = FontWeight.Bold
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(onClick = {
-                                    val updated = item.copy(quantity = item.quantity + 1)
-                                    inventoryItems[index] = updated
-                                    userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
-                                }) {
-                                    Icon(Icons.Default.Add, contentDescription = "Increase")
-                                }
-
-                                Text(
-                                    "${item.quantity}",
-                                    fontSize = 20.sp,
-                                    modifier = Modifier.padding(8.dp)
-                                )
-
-                                IconButton(onClick = {
-                                    if (item.quantity > 1) {
-                                        val updated = item.copy(quantity = item.quantity - 1)
-                                        inventoryItems[index] = updated
-                                        userId?.let { uid ->
-                                            FirebaseDatabaseManager.updateInventoryItem(uid, updated)
-                                        }
-                                    } else {
-                                        pendingDelete = item
-                                    }
-                                }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Decrease")
-                                }
-                            }
-                        }
-                    }
-                    },
-                )
+                }
             }
         }
         // only show when an item is pending
