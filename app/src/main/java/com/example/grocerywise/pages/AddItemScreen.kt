@@ -81,7 +81,7 @@ fun AddItemScreen(
         OutlinedTextField(
             value = itemName.value,
             onValueChange = {
-                if (it.length <= 30) {
+                if (it.length <= 33) {
                     itemName.value = it
                 }
             },

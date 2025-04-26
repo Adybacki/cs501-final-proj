@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,12 +20,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.R
 
 @Composable
 fun SignupPage(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
@@ -47,25 +53,43 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Sign up for GroceryWise", fontSize = 30.sp)
+        Text(text = "Sign up for GroceryWise", fontSize = 25.sp, fontFamily = FontFamily(Font(resId = R.font.nunitobold)),)
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        OutlinedTextField(value = email, onValueChange = {email = it}, label = {
-            Text("Email")
-        })
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it.take(40) },
+            label = {
+                Text("Email", fontFamily = FontFamily(Font(resId = R.font.nunito)))
+            },
+            maxLines = 1,
+            colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF44B863),
+            ),
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(value = password, onValueChange = {password = it}, label = {
-            Text("Password")
-        })
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it.take(40) },
+            label = {
+                Text("Password", fontFamily = FontFamily(Font(resId = R.font.nunito)))
+            },
+            maxLines = 1,
+            colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF44B863),
+            ),
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Button( onClick = {
             authViewModel.signup(email, password)
-        }, enabled = authState.value != AuthState.Loading) {
+        },  enabled = authState.value != AuthState.Loading && (password != "" && email != "")) {
             Text("Create account")
         }
 

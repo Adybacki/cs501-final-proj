@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
@@ -97,22 +98,18 @@ fun GroceryListScreen(
             TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
 
             Spacer(modifier = Modifier.height(8.dp))
-
-            Button(onClick = {
-                groceryItems.forEach { item ->
-                    val updatedItem = item.copy(isChecked = true)
-                    item.isChecked = true
-                    if (userId != null) {
-                        FirebaseDatabaseManager.updateGroceryListItem(userId, updatedItem)
-                    }
-                }
-            }) {
-                Text("Check All Items")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
         }
-
+        Button(onClick = {
+            groceryItems.forEach { item ->
+                val updatedItem = item.copy(isChecked = true)
+                item.isChecked = true
+                if (userId != null) {
+                    FirebaseDatabaseManager.updateGroceryListItem(userId, updatedItem)
+                }
+            }
+        }) {
+            Text("Check All Items")
+        }
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(items = groceryItems, key = { it.id!! }) { item ->
                 val dismissState = rememberDismissState(
@@ -225,7 +222,7 @@ fun GroceryListItem(
     onEditClicked: () -> Unit,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    var checkboxChecked by remember { mutableStateOf(item.isChecked) }
+    val checkboxChecked by rememberUpdatedState(item.isChecked)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -241,8 +238,6 @@ fun GroceryListItem(
             Checkbox(
                 checked = checkboxChecked,
                 onCheckedChange = { checked ->
-                    checkboxChecked = checked
-                    item.isChecked = checked
                     onCheckedChange(checked)
                 }
             )

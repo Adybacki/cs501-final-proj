@@ -195,7 +195,7 @@ fun getProductDetails(
 
                     if (product != null) {
                         val trimmedTitle = if (product.title.length > 30) {
-                            product.title.substring(0, 30)
+                            product.title.substring(0, 30) + "..."
                         } else {
                             product.title
                         }

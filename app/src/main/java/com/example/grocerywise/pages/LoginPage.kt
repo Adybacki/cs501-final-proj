@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -142,9 +143,8 @@ fun LoginPage(
                     },
                     maxLines = 1,
                     colors =
-                        TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFF44B863),
-                            focusedLabelColor = Color(0xFF615fd4),
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF44B863),
                         ),
                 )
 
@@ -158,10 +158,9 @@ fun LoginPage(
                     },
                     maxLines = 1,
                     colors =
-                        TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFF44B863),
-                            focusedLabelColor = Color(0xFF615fd4),
-                        ),
+                    OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF44B863),
+                    ),
                     visualTransformation = PasswordVisualTransformation(),
                 )
 
