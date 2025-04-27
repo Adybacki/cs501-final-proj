@@ -3,6 +3,9 @@ package com.example.grocerywise.pages
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,10 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,9 +39,12 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -47,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.window.core.layout.WindowWidthSizeClass
+import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -60,6 +69,8 @@ import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 
 @Composable
 fun Recipe(
@@ -80,6 +91,7 @@ fun Recipe(
     var done by remember { mutableStateOf(false) }
     val loading by rememberLottieComposition(LottieCompositionSpec.Asset("animations/loading.json"))
     val animatable = rememberLottieAnimatable()
+    val displayRowState = rememberLazyListState()
     LaunchedEffect(userId, inventoryItem, search) {
         if (userId != null) {
             inventoryItem.listIterator().forEach { item ->
@@ -109,10 +121,47 @@ fun Recipe(
     when (info) {
         WindowWidthSizeClass.COMPACT -> {
             Column(
-                modifier = Modifier.fillMaxSize(1f).padding(vertical = 20.dp, horizontal = 5.dp),
+                modifier = Modifier.fillMaxSize(1f).padding(vertical = 10.dp, horizontal = 5.dp),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                if (done) {
+                    if (!recipeList.isEmpty()) {
+                        LaunchedEffect(displayRowState, recipeList) {
+                            snapshotFlow { displayRowState.layoutInfo.totalItemsCount }.first { it > 0 }
+                            val midway = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % recipeList.size)
+                            displayRowState.scrollToItem(midway, scrollOffset = 0)
+                            while (isActive) {
+                                displayRowState.animateScrollBy(
+                                    value = 300f,
+                                    animationSpec =
+                                        tween(
+                                            8000,
+                                            easing = EaseInOut,
+                                        ),
+                                )
+                            }
+                        }
+                    }
+
+                    LazyRow(
+                        state = displayRowState,
+                        modifier = Modifier.fillMaxWidth().height(120.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(count = Int.MAX_VALUE, key = { it }) { idx ->
+                            val index = idx % recipeList.size
+                            val correctedActualIndex = if (index < 0) idx + recipeList.size else index
+                            AsyncImage(
+                                model = recipeList[correctedActualIndex].image,
+                                contentDescription = "Images",
+                                modifier = Modifier.height(110.dp).clip(RoundedCornerShape(15.dp)),
+                                contentScale = ContentScale.Fit,
+                            )
+                        }
+                    }
+                }
+
                 Text(
                     "Recipe Finder",
                     fontWeight = FontWeight.W600,
@@ -214,8 +263,10 @@ fun Recipe(
                     LazyVerticalGrid(
                         modifier = Modifier.fillMaxWidth().fillMaxHeight(),
                         contentPadding = PaddingValues(horizontal = 3.dp, vertical = 5.dp),
-                        columns = GridCells.Adaptive(minSize = 150.dp),
+                        columns = GridCells.Fixed(2),
                         userScrollEnabled = true,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         items(recipeList) { recipe ->
                             RecipeCard(Info = recipe)
