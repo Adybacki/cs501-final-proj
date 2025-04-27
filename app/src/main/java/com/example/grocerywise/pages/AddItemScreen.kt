@@ -80,7 +80,11 @@ fun AddItemScreen(
 
         OutlinedTextField(
             value = itemName.value,
-            onValueChange = { itemName.value = it },
+            onValueChange = {
+                if (it.length <= 33) {
+                    itemName.value = it
+                }
+            },
             label = { Text("Item Name") },
             modifier = Modifier.fillMaxWidth(),
         )

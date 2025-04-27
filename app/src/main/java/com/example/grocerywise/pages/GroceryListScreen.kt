@@ -21,12 +21,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -34,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
@@ -88,68 +92,108 @@ fun GroceryListScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Grocery List", fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("Grocery List", fontSize = 24.sp, fontWeight = FontWeight.W900, modifier = Modifier.weight(1f), fontFamily = FontFamily(
+                Font(resId = R.font.nunitobold)
+            ),)
             TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        Button(onClick = {
+            groceryItems.forEach { item ->
+                val updatedItem = item.copy(isChecked = true)
+                item.isChecked = true
+                if (userId != null) {
+                    FirebaseDatabaseManager.updateGroceryListItem(userId, updatedItem)
+                }
+            }
+        }) {
+            Text("Check All Items")
         }
 
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(items = groceryItems, key = { it.id!! }) { item ->
-                val dismissState = rememberDismissState(
-                    confirmStateChange = { state ->
-                        if (state == DismissValue.DismissedToStart) {
-                            FirebaseDatabaseManager.removeGroceryListItem(userId!!, item.id!!) { success, exception ->
-                                if (success) {
-                                    Log.d("GroceryList", "Item removed successfully.")
-                                } else {
-                                    Log.e("GroceryList", "Error removing item: ${exception?.message}")
+        if (groceryItems.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Your grocery list is empty!\nAdd items using the + button on the bottom right.",
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(items = groceryItems, key = { it.id!! }) { item ->
+                    val dismissState = rememberDismissState(
+                        confirmStateChange = { state ->
+                            if (state == DismissValue.DismissedToStart) {
+                                FirebaseDatabaseManager.removeGroceryListItem(
+                                    userId!!,
+                                    item.id!!
+                                ) { success, exception ->
+                                    if (success) {
+                                        Log.d("GroceryList", "Item removed successfully.")
+                                    } else {
+                                        Log.e(
+                                            "GroceryList",
+                                            "Error removing item: ${exception?.message}"
+                                        )
+                                    }
+                                }
+                                true
+                            } else false
+                        }
+                    )
+
+                    //Swipe to remove item feature
+                    androidx.compose.material.SwipeToDismiss(
+                        state = dismissState,
+                        directions = setOf(DismissDirection.EndToStart),
+                        background = {
+                            val color = when (dismissState.dismissDirection) {
+                                DismissDirection.EndToStart -> Color.Red
+                                else -> Color.Transparent
+                            }
+
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(end = 20.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = null,
+                                        tint = Color.White
+                                    )
                                 }
                             }
-                            true
-                        } else false
-                    }
-                )
-
-                //Swipe to remove item feature
-                androidx.compose.material.SwipeToDismiss(
-                    state = dismissState,
-                    directions = setOf(DismissDirection.EndToStart),
-                    background = {
-                        val color = when (dismissState.dismissDirection) {
-                            DismissDirection.EndToStart -> Color.Red
-                            else -> Color.Transparent
-                        }
-
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(color)
-                                .padding(end = 20.dp),
-                            contentAlignment = Alignment.CenterEnd
-                        ) {
-                            if (dismissState.dismissDirection == DismissDirection.EndToStart) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = null,
-                                    tint = Color.White
+                        },
+                        dismissContent = {
+                            if (userId != null) {
+                                GroceryListItem(
+                                    item = item,
+                                    onEditClicked = {
+                                        showEditDialog.value = item
+                                    },
+                                    onCheckedChange = { checked ->
+                                        val updatedItem = item.copy(isChecked = checked)
+                                        FirebaseDatabaseManager.updateGroceryListItem(
+                                            userId,
+                                            updatedItem
+                                        )
+                                    }
                                 )
                             }
                         }
-                    },
-                    dismissContent = {
-                        if (userId != null) {
-                            GroceryListItem(
-                                item = item,
-                                onEditClicked = {
-                                    showEditDialog.value = item
-                                },
-                                onCheckedChange = { checked ->
-                                    val updatedItem = item.copy(isChecked = checked)
-                                    FirebaseDatabaseManager.updateGroceryListItem(userId, updatedItem)
-                                }
-                            )
-                        }
-                    }
-                )
+                    )
+                }
             }
         }
 
@@ -204,36 +248,43 @@ fun GroceryListItem(
     onEditClicked: () -> Unit,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    var checkboxChecked by remember { mutableStateOf(item.isChecked) }
-    Row(
+    val checkboxChecked by rememberUpdatedState(item.isChecked)
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 8.dp, horizontal = 12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Checkbox(
-            checked = checkboxChecked,
-            onCheckedChange = { checked ->
-                checkboxChecked = checked
-                item.isChecked = checked
-                onCheckedChange(checked)
-            }
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        if (item.imageUrl != null) {
-            AsyncImage(
-                model = item.imageUrl,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp).clip(CircleShape)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = checkboxChecked,
+                onCheckedChange = { checked ->
+                    onCheckedChange(checked)
+                }
             )
             Spacer(modifier = Modifier.width(8.dp))
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(item.name, fontWeight = FontWeight.SemiBold)
-            Text("Qty: ${item.quantity} · $${"%.2f".format(item.estimatedPrice)}")
-        }
-        IconButton(onClick = onEditClicked) {
-            Icon(Icons.Default.MoreVert, contentDescription = "Edit item")
+            if (item.imageUrl != null) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.name, fontWeight = FontWeight.SemiBold)
+                Text("Qty: ${item.quantity} · $${"%.2f".format(item.estimatedPrice)}")
+            }
+            IconButton(onClick = onEditClicked) {
+                Icon(Icons.Default.MoreVert, contentDescription = "Edit item")
+            }
         }
     }
 }
