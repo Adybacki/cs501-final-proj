@@ -130,7 +130,7 @@ fun Recipe(
             if (currentDisplay != null) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(1f).background(color = Color(0xFFD5BDAF)),
-                    verticalArrangement = Arrangement.Center,
+                    verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = true,
                 ) {
