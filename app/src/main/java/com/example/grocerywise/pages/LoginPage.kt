@@ -54,14 +54,14 @@ fun LoginPage(
 
     val context = LocalContext.current
     val loginAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/signin.json"))
-    val Animatable = rememberLottieAnimatable()
+    val animatable = rememberLottieAnimatable()
     val rejection by rememberLottieComposition(LottieCompositionSpec.Asset("animations/reject.json"))
-    var rejected by remember { mutableStateOf(false) }
+
     LaunchedEffect(authState.value, loginAni) {
         when (authState.value) {
             is AuthState.Authenticated -> {
                 if (loginAni != null) {
-                    Animatable.animate(
+                    animatable.animate(
                         composition = loginAni,
                         clipSpec = LottieClipSpec.Progress(0.4f, 0.8f),
                         speed = 1.5f,
@@ -74,7 +74,7 @@ fun LoginPage(
             }
             is AuthState.Loading -> {
                 if (loginAni != null) {
-                    Animatable.animate(
+                    animatable.animate(
                         clipSpec = LottieClipSpec.Progress(0f, 0.4f),
                         composition = loginAni,
                         speed = 1.5f,
@@ -84,7 +84,7 @@ fun LoginPage(
             }
             is AuthState.Error -> {
                 if (rejection != null) {
-                    Animatable.animate(
+                    animatable.animate(
                         clipSpec = LottieClipSpec.Progress(0f, 0.8f),
                         composition = rejection,
                         speed = 1.5f,
@@ -113,7 +113,7 @@ fun LoginPage(
             ) {
                 LottieAnimation(
                     composition = loginAni,
-                    progress = { Animatable.progress },
+                    progress = { animatable.progress },
                 )
             }
         }
@@ -172,13 +172,32 @@ fun LoginPage(
                 }, enabled = authState.value != AuthState.Loading && (password != "" && email != "")) {
                     Text("Login")
                 }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(5.dp))
+                // --- Forgot password button ---
+                TextButton(onClick = {
+                    if (email.isBlank()) {
+                        Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT).show()
+                    } else {
+                        authViewModel.resetPassword(email) { success, error ->
+                            if (success) {
+                                Toast.makeText(context, "Password reset email sent", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, "Failed: $error", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }) {
+                    Text("Forgot password?")
+                }
+
+                Spacer(Modifier.height(8.dp))
 
                 TextButton(onClick = {
                     navController.navigate("signup")
-                }) { Text("Don't have an account? Sign up here") }
-            }
+                }) {
+                    Text("Don't have an account? Sign up here")
+                }}
 
         is AuthState.Error -> {
             Column(
@@ -188,7 +207,7 @@ fun LoginPage(
             ) {
                 LottieAnimation(
                     composition = rejection,
-                    progress = { Animatable.progress },
+                    progress = { animatable.progress },
                 )
             }
         }
@@ -200,7 +219,7 @@ fun LoginPage(
             ) {
                 LottieAnimation(
                     composition = loginAni,
-                    progress = { Animatable.progress },
+                    progress = { animatable.progress },
                 )
             }
         }
