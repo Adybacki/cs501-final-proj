@@ -15,10 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.grocerywise.ui.theme.Brown
+import com.example.grocerywise.ui.theme.Sage
 
 @Composable
 fun BottomNavBar(navController: NavController) {
-    BottomNavigation {
+    BottomNavigation (backgroundColor = Sage) {
         BottomNavigationItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Inventory", tint = Color.White) },
             label = { Text("Inventory", color = Color.White) },

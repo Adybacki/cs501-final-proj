@@ -18,8 +18,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -27,17 +32,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
+import com.example.grocerywise.ui.theme.Sage
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -76,7 +86,9 @@ fun AddItemScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Add Item", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text("Add Item", fontSize = 24.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily(
+            Font(resId = R.font.nunitobold)
+        ))
 
         OutlinedTextField(
             value = itemName.value,
@@ -85,8 +97,13 @@ fun AddItemScreen(
                     itemName.value = it
                 }
             },
-            label = { Text("Item Name") },
+            label = { Text("Item Name", fontFamily = FontFamily(
+                Font(resId = R.font.nunito))) },
             modifier = Modifier.fillMaxWidth(),
+            colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Sage,
+            ),
         )
 
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -99,9 +116,14 @@ fun AddItemScreen(
                         priceEstimate.value = newValue
                     }
                 },
-                label = { Text("Price Estimate Per Item") },
+                label = { Text("Price Estimate Per Item", fontFamily = FontFamily(
+                    Font(resId = R.font.nunito))) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(2f / 3f),
+                colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Sage,
+                ),
             )
             Spacer(modifier = Modifier.width(12.dp))
             OutlinedTextField(
@@ -112,25 +134,39 @@ fun AddItemScreen(
                         quantity.value = newValue
                     }
                 },
-                label = { Text("Quantity") },
+                label = { Text("Quantity", fontFamily = FontFamily(
+                    Font(resId = R.font.nunito))) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
+                colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Sage,
+                ),
             )
         }
 
-        OutlinedTextField(
-            value = upcCode.value,
-            onValueChange = { newValue ->
-                // Allow only digits and a maximum of 12 characters.
-                if (newValue.all { it.isDigit() } && newValue.length <= 12) {
-                    upcCode.value = newValue
-                }
-            },
-            label = { Text("UPC Code") },
-            modifier = Modifier.fillMaxWidth(),
-        )
+        Row ( modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically ) {
+            OutlinedTextField(
+                value = upcCode.value,
+                onValueChange = { newValue ->
+                    // Allow only digits and a maximum of 12 characters.
+                    if (newValue.all { it.isDigit() } && newValue.length <= 12) {
+                        upcCode.value = newValue
+                    }
+                },
+                label = { Text("UPC Code", fontFamily = FontFamily(
+                    Font(resId = R.font.nunito))) }, colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Sage,
+                ),
+            )
+            Button(onClick = {}, modifier = Modifier.padding(4.dp), colors= ButtonDefaults.buttonColors(containerColor = Sage),) {
+                Icon(Icons.Default.Search, contentDescription = "Search UPC")
+            }
+        }
 
-        Button(onClick = { imagePickerLauncher.launch("image/*") }) {
+        Button(onClick = { imagePickerLauncher.launch("image/*") }, colors= ButtonDefaults.buttonColors(containerColor = Sage),) {
             Text("Upload Photo")
         }
 
@@ -151,7 +187,7 @@ fun AddItemScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            Button(
+            Button(colors= ButtonDefaults.buttonColors(containerColor = Sage),
                 onClick = {
                     if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
                         // Create an InventoryItem object.
@@ -190,7 +226,7 @@ fun AddItemScreen(
                 Text("Add to Inventory")
             }
 
-            Button(
+            Button(colors= ButtonDefaults.buttonColors(containerColor = Sage),
                 onClick = {
                     if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
                         // Create a GroceryListItem object in db, price 默认 0.0

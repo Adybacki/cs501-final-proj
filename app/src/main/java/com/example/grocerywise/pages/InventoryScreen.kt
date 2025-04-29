@@ -67,6 +67,7 @@ import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.InventoryItem
+import com.example.grocerywise.ui.theme.Cream
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -279,7 +280,8 @@ fun InventoryScreen(
                     text = "Your inventory is empty!\nAdd items using the + button on the bottom right.",
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily(Font(resId = R.font.nunitobold))
                 )
             }
         } else {
@@ -340,6 +342,7 @@ fun InventoryScreen(
                         },
                         dismissContent = {
                             Card(
+                                colors = CardDefaults.cardColors(containerColor = Cream),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp, vertical = 4.dp),

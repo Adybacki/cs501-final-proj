@@ -41,6 +41,8 @@ import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
+import com.example.grocerywise.ui.theme.Cream
+import com.example.grocerywise.ui.theme.Sage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -95,11 +97,11 @@ fun GroceryListScreen(
             Text("Grocery List", fontSize = 24.sp, fontWeight = FontWeight.W900, modifier = Modifier.weight(1f), fontFamily = FontFamily(
                 Font(resId = R.font.nunitobold)
             ),)
-            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out") }
+            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
 
             Spacer(modifier = Modifier.height(8.dp))
         }
-        Button(onClick = {
+        Button(colors= ButtonDefaults.buttonColors(containerColor = Sage), onClick = {
             groceryItems.forEach { item ->
                 val updatedItem = item.copy(isChecked = true)
                 item.isChecked = true
@@ -122,7 +124,8 @@ fun GroceryListScreen(
                     text = "Your grocery list is empty!\nAdd items using the + button on the bottom right.",
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily(Font(resId = R.font.nunitobold))
                 )
             }
         } else {
@@ -213,7 +216,7 @@ fun GroceryListScreen(
         Spacer(Modifier.padding(8.dp))
         Column(horizontalAlignment = Alignment.Start) {
             Text("Total: $${"%.2f".format(totalCost)}", fontWeight = FontWeight.Bold, modifier = Modifier.padding(8.dp))
-            Button(onClick = {
+            Button(colors= ButtonDefaults.buttonColors(containerColor = Sage), onClick = {
                 groceryItems.filter { it.isChecked }.forEach { checkedItem ->
                     val inventoryItem = InventoryItem(
                         name = checkedItem.name,
@@ -253,7 +256,10 @@ fun GroceryListItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Cream
+        ),
     ) {
         Row(
             modifier = Modifier
@@ -265,7 +271,7 @@ fun GroceryListItem(
                 checked = checkboxChecked,
                 onCheckedChange = { checked ->
                     onCheckedChange(checked)
-                }
+                }, colors = CheckboxDefaults.colors(uncheckedColor = Sage, checkedColor = Sage)
             )
             Spacer(modifier = Modifier.width(8.dp))
             if (item.imageUrl != null) {
