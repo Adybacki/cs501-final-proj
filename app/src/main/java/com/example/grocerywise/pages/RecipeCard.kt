@@ -35,12 +35,16 @@ import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
 
 @Composable
-fun RecipeCard(Info: RecipeResponse) {
+fun RecipeCard(
+    Info: RecipeResponse,
+    callback: () -> Unit,
+) {
     ElevatedCard(
         modifier = Modifier.heightIn(min = 180.dp).widthIn(min = 180.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE9EDCA)),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         shape = RoundedCornerShape(corner = CornerSize(10.dp)),
+        onClick = callback,
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 15.dp),
