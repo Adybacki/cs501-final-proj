@@ -239,8 +239,6 @@ fun Recipe(
                     item {
                         Text(
                             text = currentDisplay.title,
-                            fontSize = 30.sp,
-                            color = Color.DarkGray,
                             fontWeight = FontWeight.W600,
                             softWrap = true,
                             fontSize = 14.sp,
@@ -495,3 +493,4 @@ fun Recipe(
         }
     }
 }
+}}}
