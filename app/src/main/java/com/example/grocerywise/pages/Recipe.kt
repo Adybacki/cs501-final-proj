@@ -73,6 +73,7 @@ import com.example.grocerywise.ClassifyRequestBody
 import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
+import com.example.grocerywise.models.InventoryItem
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -89,6 +90,8 @@ fun Recipe(
     val activity = LocalActivity.current as ComponentActivity
     val inventoryViewModel: InventoryViewModel = viewModel(viewModelStoreOwner = activity)
     val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
+
+    val prev = remember { mutableStateListOf<InventoryItem>() }
     var fetched by remember { mutableStateOf(false) }
     val recipeList = remember { mutableStateListOf<RecipeResponse>() }
     val search by remember { mutableStateOf(false) }
@@ -100,6 +103,14 @@ fun Recipe(
     var touchedDisplay by remember { mutableStateOf<RecipeResponse?>(null) }
     LaunchedEffect(userId, inventoryItem, search) {
         if (userId != null) {
+            if (prev == inventoryItem) {
+                done = true
+                return@LaunchedEffect
+            }
+            Log.i("prev", prev.joinToString())
+            Log.i("inventroyItem", inventoryItem.joinToString())
+            prev.clear()
+            prev.addAll(inventoryItem)
             inventoryItem.listIterator().forEach { item ->
                 val itemName = item.name
 //                val upc = item.upc
@@ -121,6 +132,8 @@ fun Recipe(
             recipeList.clear()
             recipeList.addAll(rcpResponse)
             done = true
+        } else {
+            recipeList.clear()
         }
     }
 

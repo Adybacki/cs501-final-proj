@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 class InventoryViewModel : ViewModel() {
     private val _inventoryItems = MutableStateFlow<List<InventoryItem>>(emptyList())
-    private val _categories = MutableStateFlow<List<String>>(emptyList())
 
     val inventoryItems: StateFlow<List<InventoryItem>> = _inventoryItems
 
