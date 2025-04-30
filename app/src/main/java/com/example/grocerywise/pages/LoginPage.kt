@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -39,6 +41,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
+import com.example.grocerywise.ui.theme.Sage
 
 @Composable
 fun LoginPage(
@@ -144,7 +147,7 @@ fun LoginPage(
                     maxLines = 1,
                     colors =
                         OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF44B863),
+                            focusedBorderColor = Sage,
                         ),
                 )
 
@@ -159,7 +162,7 @@ fun LoginPage(
                     maxLines = 1,
                     colors =
                     OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF44B863),
+                        focusedBorderColor = Sage,
                     ),
                     visualTransformation = PasswordVisualTransformation(),
                 )
@@ -169,7 +172,7 @@ fun LoginPage(
                 Button(onClick = {
                     hit = true
                     authViewModel.login(email, password)
-                }, enabled = authState.value != AuthState.Loading && (password != "" && email != "")) {
+                }, enabled = authState.value != AuthState.Loading && (password != "" && email != ""), colors = ButtonDefaults.buttonColors(containerColor = Sage)) {
                     Text("Login")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -188,7 +191,7 @@ fun LoginPage(
                         }
                     }
                 }) {
-                    Text("Forgot password?")
+                    Text("Forgot password?", color = Sage)
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -196,7 +199,7 @@ fun LoginPage(
                 TextButton(onClick = {
                     navController.navigate("signup")
                 }) {
-                    Text("Don't have an account? Sign up here")
+                    Text("Don't have an account? Sign up here", color = Sage)
                 }}
 
         is AuthState.Error -> {

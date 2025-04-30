@@ -94,8 +94,8 @@ fun GroceryListScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Grocery List", fontSize = 24.sp, fontWeight = FontWeight.W900, modifier = Modifier.weight(1f), fontFamily = FontFamily(
-                Font(resId = R.font.nunitobold)
+            Text(text = "Grocery List", fontSize = 30.sp, fontWeight = FontWeight.W900, modifier = Modifier.weight(1f).fillMaxWidth(), fontFamily = FontFamily(
+                Font(resId = R.font.nunitobold),
             ),)
             TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
 

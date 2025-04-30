@@ -23,7 +23,7 @@ fun BottomNavBar(navController: NavController) {
     BottomNavigation (backgroundColor = Sage) {
         BottomNavigationItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Inventory", tint = Color.White) },
-            label = { Text("Inventory", color = Color.White) },
+            label = { Text("Pantry", color = Color.White) },
             selected = navController.currentDestination?.route == "inventory",
             onClick = { navController.navigate("inventory") },
         )

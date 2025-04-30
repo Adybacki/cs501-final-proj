@@ -200,38 +200,13 @@ fun InventoryScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Inventory",
-                fontSize = 24.sp,
+                text = "Pantry",
+                fontSize = 30.sp,
                 fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
-            FloatingActionButton(
-                onClick = {
-                    authViewModel.signout()
-                },
-                interactionSource = interactionSource,
-                containerColor = Color.Red,
-                modifier = Modifier.width(55.dp).onFocusEvent { },
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LottieAnimation(
-                        composition = signoutAni,
-                        progress = { if (isPressed) progress_so else 0f },
-                        modifier = Modifier.size(50.dp),
-                    )
-
-//                            Icon(
-//                                modifier = Modifier.size(24.dp),
-//                                painter = painterResource(id = R.drawable.signout),
-//                                contentDescription = "signout",
-//                            )
-                }
-            }
+            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
         }
         Spacer(modifier = Modifier.height(20.dp))
         // Display current usage as a horizontal progress bar.
@@ -243,12 +218,12 @@ fun InventoryScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                "Current Usage:",
-                fontSize = 14.sp,
-                color = Color(0xFF29b34e),
-            )
-            Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
+//            Text(
+//                "Current Usage:",
+//                fontSize = 14.sp,
+//                color = Color(0xFF29b34e),
+//            )
+            Row(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
                 percentageList.forEachIndexed { index, (name, per) ->
                     val color = hexToColor(shuffledColors[index % shuffledColors.size])
                     Box(
@@ -257,10 +232,11 @@ fun InventoryScreen(
                                 .fillMaxHeight()
                                 .fillMaxWidth(per)
                                 .background(color = color),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = name,
-                            fontFamily = FontFamily(Font(resId = R.font.nunito)),
+                            fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
                             fontSize = 10.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(2.dp),

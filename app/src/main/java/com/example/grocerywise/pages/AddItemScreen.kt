@@ -201,7 +201,7 @@ fun AddItemScreen(
                             )
                         FirebaseDatabaseManager.addInventoryItem(userId, newItem) { success, exception ->
                             if (success) {
-                                navController.navigate("grocery_list")
+                                navController.navigate("inventory")
                             } else {
                                 Toast
                                     .makeText(

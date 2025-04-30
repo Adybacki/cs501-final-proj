@@ -42,6 +42,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -59,6 +60,7 @@ import com.example.grocerywise.ClassifyRequestBody
 import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
+import com.example.grocerywise.ui.theme.Sage
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -109,16 +111,18 @@ fun Recipe(
     when (info) {
         WindowWidthSizeClass.COMPACT -> {
             Column(
-                modifier = Modifier.fillMaxSize(1f).padding(vertical = 20.dp, horizontal = 5.dp),
+                modifier = Modifier.fillMaxSize(1f).padding(vertical = 20.dp, horizontal = 16.dp),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     "Recipe Finder",
+                    modifier = Modifier.fillMaxWidth(),
                     fontWeight = FontWeight.W600,
-                    fontFamily = FontFamily(Font(R.font.defaultfont)),
+                    fontFamily = FontFamily(Font(R.font.nunitobold)),
                     fontSize = 30.sp,
                     color = Color(0xFF101210),
+                    textAlign = TextAlign.Left
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
@@ -140,7 +144,7 @@ fun Recipe(
                                 fontSize = 18.sp,
                                 fontFamily =
                                     FontFamily(
-                                        Font(R.font.defaultfont),
+                                        Font(R.font.nunitobold),
                                     ),
                             ),
                         modifier =
@@ -156,16 +160,17 @@ fun Recipe(
                         shape = RoundedCornerShape(50),
                         value = searchVal,
                         onValueChange = { value: String ->
-                            searchVal =
-                                value
+                            if (value.length <= 33) {
+                                searchVal = value
+                            }
                         },
                         placeholder = {
                             Text(
-                                "search your recipe",
+                                "Search your recipe",
                                 fontSize = 18.sp,
                                 fontFamily =
                                     FontFamily(
-                                        Font(R.font.defaultfont),
+                                        Font(R.font.nunito),
                                     ),
                                 color = Color.LightGray,
                             )
@@ -177,18 +182,16 @@ fun Recipe(
                         },
                         contentPadding = PaddingValues(0.dp),
                         modifier =
-                            Modifier.fillMaxWidth().height(
-                                40.dp,
-                            ),
-                        shape = RoundedCornerShape(15.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF022e2d)),
+                            Modifier.fillMaxWidth()
+                            ,
+                        colors = ButtonDefaults.buttonColors(containerColor = Sage),
                     ) {
                         Text(
                             "Search",
                             softWrap = true,
                             fontSize = 14.sp,
-                            fontFamily = FontFamily(Font(R.font.defaultfont)),
-                            color = Color.LightGray,
+                            fontFamily = FontFamily(Font(R.font.nunitobold)),
+                            color = Color.White,
                         )
                     }
                 }

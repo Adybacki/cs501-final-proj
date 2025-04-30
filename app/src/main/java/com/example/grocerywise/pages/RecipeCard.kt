@@ -68,7 +68,7 @@ fun RecipeCard(Info: RecipeResponse) {
                     text = "Ingredients: ",
                     color = Color.DarkGray,
                     fontWeight = FontWeight.W400,
-                    fontFamily = FontFamily(Font(R.font.defaultfont)),
+                    fontFamily = FontFamily(Font(R.font.nunitobold)),
                 )
                 Info.usedIngredients.forEachIndexed { idx, ing ->
                     Row(
@@ -81,7 +81,6 @@ fun RecipeCard(Info: RecipeResponse) {
                             color = Color(0xFFCCD5AE),
                             fontWeight = FontWeight.W400,
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.defaultfont)),
                         )
                         Row {
                             Text(
@@ -95,14 +94,12 @@ fun RecipeCard(Info: RecipeResponse) {
                                     },
                                 color = Color(0xFF07b56d),
                                 fontSize = 15.sp,
-                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
                                 text = ing.unit.toString(),
                                 color = Color(0xFF07b56d),
                                 fontSize = 15.sp,
-                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                         }
                     }
@@ -118,7 +115,6 @@ fun RecipeCard(Info: RecipeResponse) {
                             text = ing.name,
                             color = Color(0xFFD4A373),
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.defaultfont)),
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text(
@@ -132,14 +128,12 @@ fun RecipeCard(Info: RecipeResponse) {
                                     },
                                 color = Color(0xFFD4A373),
                                 fontSize = 16.sp,
-                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                             if (ing.unit != null) {
                                 Text(
                                     text = ing.unit,
                                     color = Color(0xFFD4A373),
                                     fontSize = 16.sp,
-                                    fontFamily = FontFamily(Font(R.font.defaultfont)),
                                 )
                             }
                         }
