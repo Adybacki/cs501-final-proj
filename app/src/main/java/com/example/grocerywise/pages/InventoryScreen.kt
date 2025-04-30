@@ -122,7 +122,7 @@ fun InventoryScreen(
     val userId = currentUser?.uid
     // Lottie Load up
     val signoutAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/signout.json"))
-
+    val prevss = remember { mutableStateListOf<DataSnapshot>() }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val progress_so by animateLottieCompositionAsState(
@@ -142,25 +142,25 @@ fun InventoryScreen(
     // Listen for changes in the inventory data from the database.
     LaunchedEffect(userId) {
         if (userId != null) {
+            val newItems = mutableListOf<InventoryItem>()
+
             val listener =
                 object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
+//                        Log.i("onchanged Call", "being printed")
+
                         inventoryItems.clear()
                         // Iterate through each child in the inventory node.
                         snapshot.children.forEach { dataSnap ->
                             val item = dataSnap.getValue(InventoryItem::class.java)
-                            //                            val category: DataSnapshot = dataSnap.child("category") // finding the category data
-                            //                            if (category.exists()) {
-                            //                                val ctgry = category.getValue(String::class.java)
-                            //
-                            //                                if (ctgry != null) {
-                            //                                    Log.i("current catgory", ctgry)
-                            //                                } // safely deserilaztion
-                            //                            }
 
                             if (item != null) {
-                                inventoryItems.add(item)
+                                newItems.add(item)
                             }
+                        }
+                        if (inventoryItems != newItems) {
+                            inventoryItems.clear()
+                            inventoryItems.addAll(newItems)
                         }
                     }
 
@@ -169,6 +169,9 @@ fun InventoryScreen(
                     }
                 }
             FirebaseDatabaseManager.listenToInventory(userId, listener)
+        } else {
+            inventoryItems.clear()
+            return@LaunchedEffect
         }
     }
 

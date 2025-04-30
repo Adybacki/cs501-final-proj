@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -33,11 +35,16 @@ import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
 
 @Composable
-fun RecipeCard(Info: RecipeResponse) {
+fun RecipeCard(
+    Info: RecipeResponse,
+    callback: () -> Unit,
+) {
     ElevatedCard(
-        modifier = Modifier.heightIn(min = 200.dp),
+        modifier = Modifier.heightIn(min = 180.dp).widthIn(min = 180.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE9EDCA)),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(corner = CornerSize(10.dp)),
+        onClick = callback,
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 15.dp),
@@ -63,28 +70,32 @@ fun RecipeCard(Info: RecipeResponse) {
             )
             Spacer(modifier = Modifier.height(4.dp))
 
-            Column(horizontalAlignment = Alignment.Start) {
+            Column(horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
                 Text(
                     text = "Ingredients: ",
                     color = Color.DarkGray,
                     fontWeight = FontWeight.W400,
                     fontFamily = FontFamily(Font(R.font.defaultfont)),
+                    fontSize = 20.sp,
                 )
                 Info.usedIngredients.forEachIndexed { idx, ing ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
+                            maxLines = 2,
                             text = ing.name,
-                            color = Color(0xFFCCD5AE),
+                            color = Color(0xFF3A5A40),
                             fontWeight = FontWeight.W400,
-                            fontSize = 16.sp,
+                            fontSize = 18.sp,
                             fontFamily = FontFamily(Font(R.font.defaultfont)),
                         )
                         Row {
                             Text(
+                                maxLines = 2,
+                                softWrap = true,
                                 text =
                                     if (ing.amount % 1.0 ==
                                         0.0
@@ -93,15 +104,19 @@ fun RecipeCard(Info: RecipeResponse) {
                                     } else {
                                         ing.amount.toString()
                                     },
-                                color = Color(0xFF07b56d),
+                                color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
+                                fontWeight = FontWeight.W400,
                                 fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
+                                softWrap = true,
+                                maxLines = 2,
                                 text = ing.unit.toString(),
-                                color = Color(0xFF07b56d),
+                                color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
+                                fontWeight = FontWeight.W400,
                                 fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                         }
@@ -111,17 +126,23 @@ fun RecipeCard(Info: RecipeResponse) {
                 Info.missedIngredients.forEachIndexed { idx, ing ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = ing.name,
                             color = Color(0xFFD4A373),
                             fontSize = 16.sp,
+                            fontWeight = FontWeight.W400,
+                            softWrap = true,
+                            maxLines = 2,
                             fontFamily = FontFamily(Font(R.font.defaultfont)),
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text(
+                                fontWeight = FontWeight.W400,
+                                softWrap = true,
+                                maxLines = 2,
                                 text =
                                     if (ing.amount % 1.0 ==
                                         0.0
@@ -136,6 +157,9 @@ fun RecipeCard(Info: RecipeResponse) {
                             )
                             if (ing.unit != null) {
                                 Text(
+                                    fontWeight = FontWeight.W400,
+                                    softWrap = true,
+                                    maxLines = 2,
                                     text = ing.unit,
                                     color = Color(0xFFD4A373),
                                     fontSize = 16.sp,
