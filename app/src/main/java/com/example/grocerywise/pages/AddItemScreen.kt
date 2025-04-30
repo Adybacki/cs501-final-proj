@@ -161,7 +161,7 @@ fun AddItemScreen(
                     focusedBorderColor = Sage,
                 ),
             )
-            Button(onClick = {}, modifier = Modifier.padding(4.dp), colors= ButtonDefaults.buttonColors(containerColor = Sage),) {
+            Button(onClick = { getProductDetails(upcCode.value, navController)}, modifier = Modifier.padding(4.dp), colors= ButtonDefaults.buttonColors(containerColor = Sage),) {
                 Icon(Icons.Default.Search, contentDescription = "Search UPC")
             }
         }

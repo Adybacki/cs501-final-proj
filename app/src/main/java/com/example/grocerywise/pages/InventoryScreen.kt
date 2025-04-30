@@ -66,6 +66,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
+import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
 import com.example.grocerywise.ui.theme.Cream
 import com.google.firebase.auth.FirebaseAuth
@@ -442,14 +443,19 @@ fun InventoryScreen(
                         FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { success, _ ->
                             if (!success) Log.e("InventoryScreen", "delete failed")
                         }
+                        val groceryItemToAdd = GroceryItem(id = itemToDelete.id, name = itemToDelete.name, quantity = 1, upc = itemToDelete.upc, imageUrl = itemToDelete.imageUrl )
+                        if (itemToDelete.upc != null) {
+                            FirebaseDatabaseManager.addGroceryListItem(userId, groceryItemToAdd)
+                            navController.navigate("grocery_list")
+                        } else {
                         // 3) navigate to your AddItemScreen, passing fields as parameters
                         navController.navigate(
                             "add_item?" +
                                 "productName=${Uri.encode(itemToDelete.name)}" +
-                                "&productUpc=${Uri.encode(itemToDelete.upc ?: "")}" +
+                                "&productUpc=" +
                                 "&productPrice=" + // leave blank or supply default
                                 "&productImageUri=", // leave blank or supply default
-                        )
+                        )}
 
                         pendingDelete = null
                     }) {
