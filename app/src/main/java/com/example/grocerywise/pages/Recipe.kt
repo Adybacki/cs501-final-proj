@@ -91,7 +91,7 @@ fun Recipe(
     val inventoryViewModel: InventoryViewModel = viewModel(viewModelStoreOwner = activity)
     val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
 
-    val prev = remember { mutableStateListOf<InventoryItem>() }
+
     var fetched by remember { mutableStateOf(false) }
     val recipeList = remember { mutableStateListOf<RecipeResponse>() }
     val search by remember { mutableStateOf(false) }
@@ -102,15 +102,25 @@ fun Recipe(
     val displayRowState = rememberLazyListState()
     var touchedDisplay by remember { mutableStateOf<RecipeResponse?>(null) }
     LaunchedEffect(userId, inventoryItem, search) {
+        val prev = inventoryViewModel.pre
+        val recipeResponse = inventoryViewModel.Rcplist
+        Log.i("inventroyItem1", inventoryItem.joinToString())
+
+        Log.i ("prev1", prev.joinToString ())
+
         if (userId != null) {
-            if (prev == inventoryItem) {
+            if (prev == inventoryItem && prev != emptyList<InventoryItem>()) {
+                if (recipeResponse != recipeList) {
+                    recipeList.clear()
+                }
+                recipeList.addAll(recipeResponse)
                 done = true
                 return@LaunchedEffect
             }
             Log.i("prev", prev.joinToString())
             Log.i("inventroyItem", inventoryItem.joinToString())
-            prev.clear()
-            prev.addAll(inventoryItem)
+            inventoryViewModel.Memo(inventoryItem)
+
             inventoryItem.listIterator().forEach { item ->
                 val itemName = item.name
 //                val upc = item.upc
@@ -131,6 +141,7 @@ fun Recipe(
             Log.i("rcpResponseList:", rcpResponse.toString())
             recipeList.clear()
             recipeList.addAll(rcpResponse)
+            inventoryViewModel.MemoRecipeLlist(rcpResponse)
             done = true
         } else {
             recipeList.clear()

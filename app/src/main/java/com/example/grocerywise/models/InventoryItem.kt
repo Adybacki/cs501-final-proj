@@ -8,3 +8,4 @@ data class InventoryItem(
     val expirationDate: String? = null,
     val imageUrl: String? = null,
 )
+
