@@ -97,13 +97,13 @@ fun RecipeCard(
                                 maxLines = 2,
                                 softWrap = true,
                                 text =
-                                    if (ing.amount % 1.0 ==
-                                        0.0
-                                    ) {
-                                        (ing.amount.toInt().toString())
-                                    } else {
-                                        ing.amount.toString()
-                                    },
+                                if (ing.amount % 1.0 ==
+                                    0.0
+                                ) {
+                                    (ing.amount.toInt().toString())
+                                } else {
+                                    ing.amount.toString()
+                                },
                                 color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.W400,
@@ -144,13 +144,13 @@ fun RecipeCard(
                                 softWrap = true,
                                 maxLines = 2,
                                 text =
-                                    if (ing.amount % 1.0 ==
-                                        0.0
-                                    ) {
-                                        (ing.amount.toInt().toString())
-                                    } else {
-                                        ing.amount.toString()
-                                    },
+                                if (ing.amount % 1.0 ==
+                                    0.0
+                                ) {
+                                    (ing.amount.toInt().toString())
+                                } else {
+                                    ing.amount.toString()
+                                },
                                 color = Color(0xFFD4A373),
                                 fontSize = 16.sp,
                                 fontFamily = FontFamily(Font(R.font.defaultfont)),

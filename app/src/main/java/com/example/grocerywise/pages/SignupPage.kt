@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ import androidx.navigation.NavController
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
+import com.example.grocerywise.ui.theme.Sage
 
 @Composable
 fun SignupPage(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
@@ -66,7 +68,7 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
             maxLines = 1,
             colors =
             OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF44B863),
+                focusedBorderColor = Sage,
             ),
         )
 
@@ -81,7 +83,7 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
             maxLines = 1,
             colors =
             OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF44B863),
+                focusedBorderColor = Sage,
             ),
         )
 
@@ -89,7 +91,7 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
 
         Button( onClick = {
             authViewModel.signup(email, password)
-        },  enabled = authState.value != AuthState.Loading && (password != "" && email != "")) {
+        },  enabled = authState.value != AuthState.Loading && (password != "" && email != ""), colors = ButtonDefaults.buttonColors(containerColor = Sage)) {
             Text("Create account")
         }
 
@@ -97,6 +99,6 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
 
         TextButton(onClick = {
             navController.navigate("login")
-        }) { Text("Already have an account? Login here") }
+        }) { Text("Already have an account? Login here", color = Sage) }
     }
 }

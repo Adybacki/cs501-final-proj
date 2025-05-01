@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
@@ -21,7 +22,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -34,6 +37,8 @@ import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.BottomNavBar
 import com.example.grocerywise.ProductLookupRequest
 import com.example.grocerywise.ProductLookupResponse
+import com.example.grocerywise.R
+import com.example.grocerywise.ui.theme.Sage
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -82,7 +87,7 @@ fun HomePage(
                         modifier = Modifier.padding(bottom = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        FloatingActionButton(
+                        FloatingActionButton( containerColor = Sage, contentColor = Color.White,
                             onClick = {
                                 showMenu.value = false
                                 // Inside the barcode scanning success callback
@@ -100,9 +105,14 @@ fun HomePage(
                                     }
                             },
                         ) {
-                            Icon(Icons.Default.Search, contentDescription = "Scan Barcode")
+                            Icon(
+                                modifier = Modifier.size(24.dp),
+                                painter = painterResource(R.drawable.icons8_barcode_96),
+                                contentDescription = "Scan Barcode",
+                                tint = Color.White,
+                            )
                         }
-                        FloatingActionButton(
+                        FloatingActionButton(containerColor = Sage, contentColor = Color.White,
                             onClick = {
                                 showMenu.value = false
                                 navigationController.navigate("add_item")
@@ -112,7 +122,7 @@ fun HomePage(
                         }
                     }
                 }
-                FloatingActionButton(onClick = { showMenu.value = !showMenu.value }) {
+                FloatingActionButton(containerColor = Sage, contentColor = Color.White ,onClick = { showMenu.value = !showMenu.value }) {
                     Icon(
                         imageVector = if (showMenu.value) Icons.Default.Delete else Icons.Default.Add,
                         contentDescription = if (showMenu.value) "Close Menu" else "Add Item",

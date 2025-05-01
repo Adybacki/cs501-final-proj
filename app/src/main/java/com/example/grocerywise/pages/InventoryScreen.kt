@@ -66,7 +66,9 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
+import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
+import com.example.grocerywise.ui.theme.Cream
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -201,38 +203,13 @@ fun InventoryScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Inventory",
-                fontSize = 24.sp,
+                text = "Pantry",
+                fontSize = 30.sp,
                 fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
-            FloatingActionButton(
-                onClick = {
-                    authViewModel.signout()
-                },
-                interactionSource = interactionSource,
-                containerColor = Color.Red,
-                modifier = Modifier.width(55.dp).onFocusEvent { },
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LottieAnimation(
-                        composition = signoutAni,
-                        progress = { if (isPressed) progress_so else 0f },
-                        modifier = Modifier.size(50.dp),
-                    )
-
-//                            Icon(
-//                                modifier = Modifier.size(24.dp),
-//                                painter = painterResource(id = R.drawable.signout),
-//                                contentDescription = "signout",
-//                            )
-                }
-            }
+            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
         }
         Spacer(modifier = Modifier.height(20.dp))
         // Display current usage as a horizontal progress bar.
@@ -244,12 +221,12 @@ fun InventoryScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                "Current Usage:",
-                fontSize = 14.sp,
-                color = Color(0xFF29b34e),
-            )
-            Row(modifier = Modifier.fillMaxWidth(0.6f).fillMaxHeight()) {
+//            Text(
+//                "Current Usage:",
+//                fontSize = 14.sp,
+//                color = Color(0xFF29b34e),
+//            )
+            Row(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
                 percentageList.forEachIndexed { index, (name, per) ->
                     val color = hexToColor(shuffledColors[index % shuffledColors.size])
                     Box(
@@ -258,10 +235,11 @@ fun InventoryScreen(
                                 .fillMaxHeight()
                                 .fillMaxWidth(per)
                                 .background(color = color),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = name,
-                            fontFamily = FontFamily(Font(resId = R.font.nunito)),
+                            fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
                             fontSize = 10.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(2.dp),
@@ -282,7 +260,8 @@ fun InventoryScreen(
                     text = "Your inventory is empty!\nAdd items using the + button on the bottom right.",
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily(Font(resId = R.font.nunitobold))
                 )
             }
         } else {
@@ -343,6 +322,7 @@ fun InventoryScreen(
                         },
                         dismissContent = {
                             Card(
+                                colors = CardDefaults.cardColors(containerColor = Cream),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -442,14 +422,19 @@ fun InventoryScreen(
                         FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { success, _ ->
                             if (!success) Log.e("InventoryScreen", "delete failed")
                         }
+                        val groceryItemToAdd = GroceryItem(id = itemToDelete.id, name = itemToDelete.name, quantity = 1, upc = itemToDelete.upc, imageUrl = itemToDelete.imageUrl )
+                        if (itemToDelete.upc != null) {
+                            FirebaseDatabaseManager.addGroceryListItem(userId, groceryItemToAdd)
+                            navController.navigate("grocery_list")
+                        } else {
                         // 3) navigate to your AddItemScreen, passing fields as parameters
                         navController.navigate(
                             "add_item?" +
                                 "productName=${Uri.encode(itemToDelete.name)}" +
-                                "&productUpc=${Uri.encode(itemToDelete.upc ?: "")}" +
+                                "&productUpc=" +
                                 "&productPrice=" + // leave blank or supply default
                                 "&productImageUri=", // leave blank or supply default
-                        )
+                        )}
 
                         pendingDelete = null
                     }) {
