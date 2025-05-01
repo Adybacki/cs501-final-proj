@@ -73,7 +73,6 @@ import com.example.grocerywise.ClassifyRequestBody
 import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
-import com.example.grocerywise.ui.theme.Sage
 import com.example.grocerywise.models.InventoryItem
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
@@ -140,82 +139,6 @@ fun Recipe(
 
     when (info) {
         WindowWidthSizeClass.COMPACT -> {
-            Column(
-                modifier = Modifier.fillMaxSize(1f).padding(vertical = 20.dp, horizontal = 16.dp),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    "Recipe Finder",
-                    modifier = Modifier.fillMaxWidth(),
-                    fontWeight = FontWeight.W600,
-                    fontFamily = FontFamily(Font(R.font.nunitobold)),
-                    fontSize = 30.sp,
-                    color = Color(0xFF101210),
-                    textAlign = TextAlign.Left
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(1f).height(60.dp),
-                    horizontalArrangement = Arrangement.spacedBy(15.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedTextField(
-                        leadingIcon = {
-                            Icon(
-                                modifier = Modifier.size(20.dp),
-                                painter = painterResource(R.drawable.search),
-                                contentDescription = "search",
-                            )
-                        },
-                        textStyle =
-                            TextStyle(
-                                color = Color.DarkGray,
-                                fontSize = 18.sp,
-                                fontFamily =
-                                    FontFamily(
-                                        Font(R.font.nunitobold),
-                                    ),
-                            ),
-                        modifier =
-                            Modifier
-                                .fillMaxWidth(
-                                    0.8f,
-                                ).height(50.dp),
-                        colors =
-                            OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF44B863),
-                                focusedLabelColor = Color(0xFF615fd4),
-                            ),
-                        shape = RoundedCornerShape(50),
-                        value = searchVal,
-                        onValueChange = { value: String ->
-                            if (value.length <= 33) {
-                                searchVal = value
-                            }
-                        },
-                        placeholder = {
-                            Text(
-                                "Search your recipe",
-                                fontSize = 18.sp,
-                                fontFamily =
-                                    FontFamily(
-                                        Font(R.font.nunito),
-                                    ),
-                                color = Color.LightGray,
-                            )
-                        },
-                        singleLine = true,
-                    )
-                    Button(
-                        onClick = {
-                        },
-                        contentPadding = PaddingValues(0.dp),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                            ,
-                        colors = ButtonDefaults.buttonColors(containerColor = Sage),
-                    ) {
             val currentDisplay = touchedDisplay
             if (currentDisplay != null) {
                 LazyColumn(
@@ -239,12 +162,10 @@ fun Recipe(
                     item {
                         Text(
                             text = currentDisplay.title,
+                            fontSize = 30.sp,
+                            color = Color.DarkGray,
                             fontWeight = FontWeight.W600,
                             softWrap = true,
-                            fontSize = 14.sp,
-                            fontFamily = FontFamily(Font(R.font.nunitobold)),
-                            color = Color.White,
-
                             maxLines = 2,
                             textAlign = TextAlign.Center,
                             overflow = TextOverflow.Ellipsis,
@@ -350,10 +271,10 @@ fun Recipe(
                                     displayRowState.animateScrollBy(
                                         value = 600f,
                                         animationSpec =
-                                            tween(
-                                                6000,
-                                                easing = EaseInOut,
-                                            ),
+                                        tween(
+                                            6000,
+                                            easing = EaseInOut,
+                                        ),
                                     )
                                 }
                             }
@@ -399,24 +320,24 @@ fun Recipe(
                                 )
                             },
                             textStyle =
-                                TextStyle(
-                                    color = Color.DarkGray,
-                                    fontSize = 18.sp,
-                                    fontFamily =
-                                        FontFamily(
-                                            Font(R.font.defaultfont),
-                                        ),
+                            TextStyle(
+                                color = Color.DarkGray,
+                                fontSize = 18.sp,
+                                fontFamily =
+                                FontFamily(
+                                    Font(R.font.defaultfont),
                                 ),
+                            ),
                             modifier =
-                                Modifier
-                                    .fillMaxWidth(
-                                        0.8f,
-                                    ).height(50.dp),
+                            Modifier
+                                .fillMaxWidth(
+                                    0.8f,
+                                ).height(50.dp),
                             colors =
-                                OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF44B863),
-                                    focusedLabelColor = Color(0xFF615fd4),
-                                ),
+                            OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF44B863),
+                                focusedLabelColor = Color(0xFF615fd4),
+                            ),
                             shape = RoundedCornerShape(50),
                             value = searchVal,
                             onValueChange = { value: String ->
@@ -428,9 +349,9 @@ fun Recipe(
                                     "search your recipe",
                                     fontSize = 18.sp,
                                     fontFamily =
-                                        FontFamily(
-                                            Font(R.font.defaultfont),
-                                        ),
+                                    FontFamily(
+                                        Font(R.font.defaultfont),
+                                    ),
                                     color = Color.LightGray,
                                 )
                             },
@@ -441,9 +362,9 @@ fun Recipe(
                             },
                             contentPadding = PaddingValues(0.dp),
                             modifier =
-                                Modifier.fillMaxWidth().height(
-                                    40.dp,
-                                ),
+                            Modifier.fillMaxWidth().height(
+                                40.dp,
+                            ),
                             shape = RoundedCornerShape(15.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF022e2d)),
                         ) {
@@ -493,4 +414,3 @@ fun Recipe(
         }
     }
 }
-}}}

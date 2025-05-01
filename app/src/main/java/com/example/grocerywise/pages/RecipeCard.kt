@@ -75,7 +75,8 @@ fun RecipeCard(
                     text = "Ingredients: ",
                     color = Color.DarkGray,
                     fontWeight = FontWeight.W400,
-                    fontFamily = FontFamily(Font(R.font.nunitobold)),
+                    fontFamily = FontFamily(Font(R.font.defaultfont)),
+                    fontSize = 20.sp,
                 )
                 Info.usedIngredients.forEachIndexed { idx, ing ->
                     Row(
@@ -88,23 +89,25 @@ fun RecipeCard(
                             text = ing.name,
                             color = Color(0xFF3A5A40),
                             fontWeight = FontWeight.W400,
-                            fontSize = 16.sp,
+                            fontSize = 18.sp,
+                            fontFamily = FontFamily(Font(R.font.defaultfont)),
                         )
                         Row {
                             Text(
                                 maxLines = 2,
                                 softWrap = true,
                                 text =
-                                    if (ing.amount % 1.0 ==
-                                        0.0
-                                    ) {
-                                        (ing.amount.toInt().toString())
-                                    } else {
-                                        ing.amount.toString()
-                                    },
+                                if (ing.amount % 1.0 ==
+                                    0.0
+                                ) {
+                                    (ing.amount.toInt().toString())
+                                } else {
+                                    ing.amount.toString()
+                                },
                                 color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.W400,
+                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
@@ -114,6 +117,7 @@ fun RecipeCard(
                                 color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.W400,
+                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                         }
                     }
@@ -140,15 +144,16 @@ fun RecipeCard(
                                 softWrap = true,
                                 maxLines = 2,
                                 text =
-                                    if (ing.amount % 1.0 ==
-                                        0.0
-                                    ) {
-                                        (ing.amount.toInt().toString())
-                                    } else {
-                                        ing.amount.toString()
-                                    },
+                                if (ing.amount % 1.0 ==
+                                    0.0
+                                ) {
+                                    (ing.amount.toInt().toString())
+                                } else {
+                                    ing.amount.toString()
+                                },
                                 color = Color(0xFFD4A373),
                                 fontSize = 16.sp,
+                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                             if (ing.unit != null) {
                                 Text(
@@ -158,6 +163,7 @@ fun RecipeCard(
                                     text = ing.unit,
                                     color = Color(0xFFD4A373),
                                     fontSize = 16.sp,
+                                    fontFamily = FontFamily(Font(R.font.defaultfont)),
                                 )
                             }
                         }
