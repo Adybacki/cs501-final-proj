@@ -2,6 +2,7 @@ package com.example.grocerywise
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.InventoryItem
 import com.google.firebase.auth.FirebaseAuth
@@ -11,10 +12,24 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+
+
 class InventoryViewModel : ViewModel() {
     private val _inventoryItems = MutableStateFlow<List<InventoryItem>>(emptyList())
-
-    val inventoryItems: StateFlow<List<InventoryItem>> = _inventoryItems
+    private val _prev = mutableListOf<InventoryItem>()
+    private val _rcpResponse = mutableListOf<RecipeResponse>()
+//    val inventoryItems: StateFlow<List<InventoryItem>> = _inventoryItems.distinctUntilChanged().stateIn(scope = viewModelScope)
+val inventoryItems: StateFlow<List<InventoryItem>> = _inventoryItems // Apply distinctUntilChanged
+    val Rcplist: List<RecipeResponse> = _rcpResponse
+//    .stateIn(
+//        scope = viewModelScope,
+//        started = SharingStarted.WhileSubscribed(5000L),
+//        initialValue = emptyList()
+//    )
+    val pre: List<InventoryItem> = _prev
 
     init {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
@@ -34,4 +49,15 @@ class InventoryViewModel : ViewModel() {
             )
         }
     }
+    fun Memo(currentSnapshot: List<InventoryItem>){
+        _prev.clear()
+        _prev.addAll(currentSnapshot)
+
+    }
+    fun MemoRecipeLlist(currentSnapshot: List<RecipeResponse>){
+        _rcpResponse.clear()
+        _rcpResponse.addAll(currentSnapshot)
+    }
+
+
 }

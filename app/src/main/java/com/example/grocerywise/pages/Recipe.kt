@@ -91,7 +91,7 @@ fun Recipe(
     val inventoryViewModel: InventoryViewModel = viewModel(viewModelStoreOwner = activity)
     val inventoryItem by inventoryViewModel.inventoryItems.collectAsState()
 
-    val prev = remember { mutableStateListOf<InventoryItem>() }
+
     var fetched by remember { mutableStateOf(false) }
     val recipeList = remember { mutableStateListOf<RecipeResponse>() }
     val search by remember { mutableStateOf(false) }
@@ -102,15 +102,25 @@ fun Recipe(
     val displayRowState = rememberLazyListState()
     var touchedDisplay by remember { mutableStateOf<RecipeResponse?>(null) }
     LaunchedEffect(userId, inventoryItem, search) {
+        val prev = inventoryViewModel.pre
+        val recipeResponse = inventoryViewModel.Rcplist
+        Log.i("inventroyItem1", inventoryItem.joinToString())
+
+        Log.i ("prev1", prev.joinToString ())
+
         if (userId != null) {
-            if (prev == inventoryItem) {
+            if (prev == inventoryItem && prev != emptyList<InventoryItem>()) {
+                if (recipeResponse != recipeList) {
+                    recipeList.clear()
+                }
+                recipeList.addAll(recipeResponse)
                 done = true
                 return@LaunchedEffect
             }
             Log.i("prev", prev.joinToString())
             Log.i("inventroyItem", inventoryItem.joinToString())
-            prev.clear()
-            prev.addAll(inventoryItem)
+            inventoryViewModel.Memo(inventoryItem)
+
             inventoryItem.listIterator().forEach { item ->
                 val itemName = item.name
 //                val upc = item.upc
@@ -131,6 +141,7 @@ fun Recipe(
             Log.i("rcpResponseList:", rcpResponse.toString())
             recipeList.clear()
             recipeList.addAll(rcpResponse)
+            inventoryViewModel.MemoRecipeLlist(rcpResponse)
             done = true
         } else {
             recipeList.clear()
@@ -142,7 +153,7 @@ fun Recipe(
             val currentDisplay = touchedDisplay
             if (currentDisplay != null) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(1f).background(color = Color(0xFFD5BDAF)),
+                    modifier = Modifier.fillMaxSize(1f).padding(start = 10.dp, end=10.dp, top = 20.dp).background(color = Color(0xFFD5BDAF)),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = true,
@@ -150,7 +161,7 @@ fun Recipe(
                     val totalIngredients = currentDisplay.usedIngredients + currentDisplay.missedIngredients
                     item {
                         Row(Modifier.fillMaxWidth().height(25.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.End) {
-                            Button(onClick = { touchedDisplay = null }) {
+                            Button(modifier = Modifier.width(20.dp).height(20.dp), onClick = { touchedDisplay = null }) {
                                 Icon(
                                     painter = painterResource(R.drawable.close),
                                     contentDescription = "close",
@@ -159,6 +170,8 @@ fun Recipe(
                             }
                         }
                     }
+                    item{
+                    Spacer(modifier= Modifier.height(20.dp))}
                     item {
                         Text(
                             text = currentDisplay.title,
@@ -211,7 +224,7 @@ fun Recipe(
                                 Row(
                                     modifier = Modifier.fillMaxWidth(1f),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    horizontalArrangement = Arrangement.SpaceAround,
                                 ) {
                                     Text(
                                         text = "$idx. ${ing.originalName}",
@@ -235,7 +248,7 @@ fun Recipe(
                                             fontWeight = FontWeight.W400,
                                             softWrap = true,
                                             maxLines = 1,
-                                            textAlign = TextAlign.Start,
+                                            textAlign = TextAlign.End,
                                         )
                                         Text(
                                             text = ing.unit.toString(),
@@ -244,7 +257,7 @@ fun Recipe(
                                             fontWeight = FontWeight.W400,
                                             softWrap = true,
                                             maxLines = 2,
-                                            textAlign = TextAlign.Start,
+                                            textAlign = TextAlign.End,
                                         )
                                     }
                                 }
