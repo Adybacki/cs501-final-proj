@@ -153,7 +153,7 @@ fun Recipe(
             val currentDisplay = touchedDisplay
             if (currentDisplay != null) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(1f).background(color = Color(0xFFD5BDAF)),
+                    modifier = Modifier.fillMaxSize(1f).padding(start = 10.dp, end=10.dp, top = 20.dp).background(color = Color(0xFFD5BDAF)),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = true,
@@ -161,7 +161,7 @@ fun Recipe(
                     val totalIngredients = currentDisplay.usedIngredients + currentDisplay.missedIngredients
                     item {
                         Row(Modifier.fillMaxWidth().height(25.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.End) {
-                            Button(onClick = { touchedDisplay = null }) {
+                            Button(modifier = Modifier.width(20.dp).height(20.dp), onClick = { touchedDisplay = null }) {
                                 Icon(
                                     painter = painterResource(R.drawable.close),
                                     contentDescription = "close",
@@ -170,6 +170,8 @@ fun Recipe(
                             }
                         }
                     }
+                    item{
+                    Spacer(modifier= Modifier.height(20.dp))}
                     item {
                         Text(
                             text = currentDisplay.title,
@@ -222,7 +224,7 @@ fun Recipe(
                                 Row(
                                     modifier = Modifier.fillMaxWidth(1f),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    horizontalArrangement = Arrangement.SpaceAround,
                                 ) {
                                     Text(
                                         text = "$idx. ${ing.originalName}",
@@ -246,7 +248,7 @@ fun Recipe(
                                             fontWeight = FontWeight.W400,
                                             softWrap = true,
                                             maxLines = 1,
-                                            textAlign = TextAlign.Start,
+                                            textAlign = TextAlign.End,
                                         )
                                         Text(
                                             text = ing.unit.toString(),
@@ -255,7 +257,7 @@ fun Recipe(
                                             fontWeight = FontWeight.W400,
                                             softWrap = true,
                                             maxLines = 2,
-                                            textAlign = TextAlign.Start,
+                                            textAlign = TextAlign.End,
                                         )
                                     }
                                 }
