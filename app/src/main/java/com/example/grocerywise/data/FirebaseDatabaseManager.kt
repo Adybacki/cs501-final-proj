@@ -102,6 +102,29 @@ object FirebaseDatabaseManager {
             }
     }
 
+    /**
+     * Save the user’s avatar download URL under
+     * users/{uid}/avatarUrl in Realtime Database.
+     */
+    fun setAvatarUrl(userId: String, url: String) {
+        database
+            .getReference("users")
+            .child(userId)
+            .child("avatarUrl")
+            .setValue(url)
+    }
+
+    /**
+     * Return a DatabaseReference pointing to
+     * users/{uid}/avatarUrl so callers can listen to it.
+     */
+    fun getAvatarUrlRef(userId: String) =
+        database
+            .getReference("users")
+            .child(userId)
+            .child("avatarUrl")
+
+
     fun listenToGroceryList(
         userId: String,
         listener: ValueEventListener,

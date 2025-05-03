@@ -140,6 +140,7 @@ fun HomePage(
             }
             composable("grocery_list") {
                 GroceryListScreen(
+                    navController = navigationController,
                     authViewModel = authViewModel,
                 )
             }
