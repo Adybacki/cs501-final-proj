@@ -60,7 +60,8 @@ import androidx.navigation.NavController
 @Composable
 fun GroceryListScreen(
     authViewModel: AuthViewModel,
-    navController: NavController
+    navController: NavController,
+    onAvatarClick: () -> Unit
 ) {
 
     // Get the current user's UID.
@@ -122,7 +123,7 @@ fun GroceryListScreen(
                     .size(36.dp)
                     .clip(CircleShape)
                     .clickable {
-                        navController.navigate("profile")
+                        onAvatarClick()
                     }
             )
 

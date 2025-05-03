@@ -123,6 +123,7 @@ fun hexToColor(hex: String): Color {
 fun InventoryScreen(
     authViewModel: AuthViewModel,
     navController: NavController,
+    onAvatarClick: () -> Unit
 ) {
     // Get the current user's UID.
     val currentUser = FirebaseAuth.getInstance().currentUser
@@ -230,7 +231,7 @@ fun InventoryScreen(
                     .size(36.dp)
                     .clip(CircleShape)
                     .clickable {
-                        navController.navigate("profile")
+                        onAvatarClick()
                     }
             )
         }

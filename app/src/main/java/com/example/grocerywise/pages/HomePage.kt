@@ -136,12 +136,14 @@ fun HomePage(
                 InventoryScreen(
                     navController = navigationController,
                     authViewModel = authViewModel,
+                    onAvatarClick = { navController.navigate("profile") }
                 )
             }
             composable("grocery_list") {
                 GroceryListScreen(
                     navController = navigationController,
                     authViewModel = authViewModel,
+                    onAvatarClick = { navController.navigate("profile") }
                 )
             }
 
