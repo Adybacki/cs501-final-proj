@@ -1,5 +1,6 @@
 package com.example.grocerywise.pages
 
+import android.content.res.Configuration
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -64,6 +66,10 @@ fun AddItemScreen(
     val priceEstimate = remember { mutableStateOf(productPrice ?: "") }
     val upcCode = remember { mutableStateOf(productUpc ?: "") }
     val selectedImageUri = remember { mutableStateOf<Uri?>(productImageUri?.let { Uri.parse(it) }) }
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val screenWidthDp = configuration.screenWidthDp
+    val isTabletWidth = screenWidthDp >= 600
 
     // Launcher for picking an image.
     val imagePickerLauncher =
@@ -200,8 +206,12 @@ fun AddItemScreen(
                                 // Note: Price and expirationDate are not stored for inventory items.
                             )
                         FirebaseDatabaseManager.addInventoryItem(userId, newItem) { success, exception ->
-                            if (success) {
+                            if (success && !isLandscape && !isTabletWidth) {
                                 navController.navigate("inventory")
+                            } else if (success && isLandscape) {
+                                navController.navigate("pantry_shopping_combined")
+                            } else if (success) {
+                                navController.navigate("tablet_portrait")
                             } else {
                                 Toast
                                     .makeText(
@@ -241,8 +251,12 @@ fun AddItemScreen(
                                 estimatedPrice = price,
                             )
                         FirebaseDatabaseManager.addGroceryListItem(userId, newItem) { success, exception ->
-                            if (success) {
+                            if (success && !isLandscape && !isTabletWidth) {
                                 navController.navigate("grocery_list")
+                            } else if (success && isLandscape) {
+                                navController.navigate("pantry_shopping_combined")
+                            } else if (success) {
+                                navController.navigate("tablet_portrait")
                             } else {
                                 Toast
                                     .makeText(
