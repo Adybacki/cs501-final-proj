@@ -118,6 +118,8 @@ fun hexToColor(hex: String): Color {
     return Color(color or 0xFF000000L)
 }
 
+
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun InventoryScreen(
@@ -125,357 +127,634 @@ fun InventoryScreen(
     navController: NavController,
     onAvatarClick: () -> Unit
 ) {
-    // Get the current user's UID.
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    val userId = currentUser?.uid
-    // Lottie Load up
-    val signoutAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/signout.json"))
-    val prevss = remember { mutableStateListOf<DataSnapshot>() }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val progress_so by animateLottieCompositionAsState(
-        composition = signoutAni,
-        isPlaying = isPressed,
-        restartOnPlay = true,
-        iterations = LottieConstants.IterateForever,
-    )
-    // List to store inventory items from Firebase.
-
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
-//    Log.i("inventoritem: ", inventoryItems.joinToString())
-    // NEW: which item is awaiting the “add to shopping list?” prompt?
     var pendingDelete by remember { mutableStateOf<InventoryItem?>(null) }
-    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
 
-    // Listen for changes in the inventory data from the database.
+    // Lottie sign-out animation hook (unchanged)
+    val signoutAni = rememberLottieComposition(LottieCompositionSpec.Asset("animations/signout.json"))
+    val isPressedSource = remember { MutableInteractionSource() }
+    val isPressed by isPressedSource.collectIsPressedAsState()
+    val progress_so by animateLottieCompositionAsState(
+        composition = signoutAni.value,
+        isPlaying  = isPressed,
+        iterations = LottieConstants.IterateForever
+    )
+
+    // 1) Listen to Firebase – use snapshot.key as unique ID
     LaunchedEffect(userId) {
-        if (userId != null) {
-            val newItems = mutableListOf<InventoryItem>()
-
-            val listener =
-                object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-//                        Log.i("onchanged Call", "being printed")
-
-                        inventoryItems.clear()
-                        // Iterate through each child in the inventory node.
-                        snapshot.children.forEach { dataSnap ->
-                            val item = dataSnap.getValue(InventoryItem::class.java)
-
-                            if (item != null) {
-                                newItems.add(item)
-                            }
-                        }
-                        if (inventoryItems != newItems) {
-                            inventoryItems.clear()
-                            inventoryItems.addAll(newItems)
-                        }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        Log.e("InventoryScreen", "Data listener error: ${error.message}")
-                    }
-                }
-            FirebaseDatabaseManager.listenToInventory(userId, listener)
-        } else {
+        if (userId == null) {
             inventoryItems.clear()
             return@LaunchedEffect
         }
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val fresh = snapshot.children.mapNotNull { ds ->
+                    ds.getValue(InventoryItem::class.java)
+                        ?.copy(id = ds.key)
+                }
+                inventoryItems.apply {
+                    clear()
+                    addAll(fresh)
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("InventoryScreen", "listenToInventory failed: ${error.message}")
+            }
+        }
+        FirebaseDatabaseManager.listenToInventory(userId, listener)
     }
 
-    // Compute total quantity for the usage bar.
-    val totalQuantity = inventoryItems.sumOf { it.quantity }
-    // Create a list of (item name, percentage of total) pairs.
-    val percentageList =
-        if (totalQuantity == 0) {
-            emptyList<Pair<String, Float>>()
-        } else {
-            inventoryItems.map { it.name to (it.quantity.toFloat() / totalQuantity) }
-        }
-    // Shuffle colors for visual variety.
-    val shuffledColors = remember { colors.shuffled() }
-    // when (info) {
-    // WindowWidthSizeClass.COMPACT -> {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        // Top bar with title and sign out button.
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "Pantry",
-                fontSize = 30.sp,
-                fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-            )
-//            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
-            // Get the shared ProfileViewModel to read avatarUrl
-            val profileViewModel: ProfileViewModel = viewModel()
-            val avatarUrl by profileViewModel.avatarUrl.collectAsState()
+    // 2) Compute usage-bar
+    val total = inventoryItems.sumOf { it.quantity }
+    val percList = if (total == 0) emptyList() else
+        inventoryItems.map { it.name to (it.quantity.toFloat() / total) }
+    val shuffled = remember { colors.shuffled() }
 
-// Show avatar instead of text
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Top row: title + avatar
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Pantry",
+                fontSize = 30.sp,
+                fontFamily = FontFamily(Font(R.font.nunitobold)),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
             AsyncImage(
-                model = avatarUrl,
-                contentDescription = "Profile Avatar",
-                placeholder = painterResource(R.drawable.default_avatar),
-                error = painterResource(R.drawable.default_avatar),
-                fallback = painterResource(R.drawable.default_avatar),
-                modifier = Modifier
+                model = viewModel<ProfileViewModel>().avatarUrl.collectAsState().value,
+                contentDescription = "Avatar",
+                placeholder   = painterResource(R.drawable.default_avatar),
+                error         = painterResource(R.drawable.default_avatar),
+                fallback      = painterResource(R.drawable.default_avatar),
+                modifier      = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .clickable {
-                        onAvatarClick()
-                    }
+                    .clickable { onAvatarClick() }
             )
         }
-        Spacer(modifier = Modifier.height(20.dp))
-        // Display current usage as a horizontal progress bar.
+
+        Spacer(Modifier.height(20.dp))
+
+        // Usage bar
         Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            Modifier
+                .fillMaxWidth()
+                .height(20.dp),
+            verticalAlignment   = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
         ) {
-//            Text(
-//                "Current Usage:",
-//                fontSize = 14.sp,
-//                color = Color(0xFF29b34e),
-//            )
-            Row(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
-                percentageList.forEachIndexed { index, (name, per) ->
-                    val color = hexToColor(shuffledColors[index % shuffledColors.size])
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth(per)
-                                .background(color = color),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = name,
-                            fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(2.dp),
-                        )
-                    }
+            percList.forEachIndexed { i, (name, frac) ->
+                Box(
+                    Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(frac)
+                        .background(hexToColor(shuffled[i % shuffled.size])),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        name,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily(Font(R.font.nunitobold)),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(2.dp)
+                    )
                 }
             }
         }
 
+        // Empty state
         if (inventoryItems.isEmpty()) {
             Box(
-                modifier = Modifier
+                Modifier
                     .fillMaxSize()
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Your inventory is empty!\nAdd items using the + button on the bottom right.",
-                    fontSize = 20.sp,
+                    "Your inventory is empty!\nAdd items using the + button.",
                     textAlign = TextAlign.Center,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    fontFamily = FontFamily(Font(resId = R.font.nunitobold))
+                    fontFamily = FontFamily(Font(R.font.nunitobold))
                 )
             }
-        } else {
-            // List the inventory items with update buttons.
+        }
+        // List state
+        else {
             LazyColumn {
-                itemsIndexed(inventoryItems, key = { _, item -> item.id!! }) { index, item ->
-                    val dismissState =
-                        rememberDismissState(
-                            // leave initialValue at default Idle
-                            confirmStateChange = { state: DismissValue ->
-                                if (state == DismissValue.DismissedToStart) {
-                                    // 1. Remove locally
-                                    // inventoryItems.remove(item)
-                                    // 2. Tell Firebase to delete
-                                    // userId?.let { uid ->
-                                    //    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
-                                    //        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
-                                    //    }
-                                    // }
-                                    // ask the user if they want to add it to the shopping list:
-                                    pendingDelete = item
-                                    true
-                                } else {
-                                    false
-                                }
-                            },
-                        )
+                itemsIndexed(
+                    inventoryItems,
+                    key = { _, item -> item.id!! }
+                ) { index, item ->
+                    val dismissState = rememberDismissState { value ->
+                        if (value == DismissValue.DismissedToStart) {
+                            pendingDelete = item
+                            true
+                        } else false
+                    }
 
                     SwipeToDismiss(
-                        state = dismissState,
+                        state      = dismissState,
                         directions = setOf(DismissDirection.EndToStart),
                         background = {
-                            // Determine the background color:
-                            // – RED when the user is actively swiping to the left (EndToStart)
-                            // – TRANSPARENT otherwise
-                            val bgColor =
-                                when (dismissState.dismissDirection) {
-                                    DismissDirection.EndToStart -> Color.Red
-                                    else -> Color.Transparent
-                                }
-
+                            val bg = if (dismissState.dismissDirection == DismissDirection.EndToStart)
+                                Color.Red else Color.Transparent
                             Box(
                                 Modifier
                                     .fillMaxSize()
-                                    .background(bgColor)
-                                    // only add padding when showing the red background
-                                    .padding(end = if (bgColor == Color.Red) 20.dp else 0.dp),
-                                contentAlignment = Alignment.CenterEnd,
+                                    .background(bg)
+                                    .padding(end = if (bg == Color.Red) 20.dp else 0.dp),
+                                contentAlignment = Alignment.CenterEnd
                             ) {
                                 if (dismissState.dismissDirection == DismissDirection.EndToStart) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        tint = Color.White,
-                                    )
+                                    Icon(Icons.Default.Delete, contentDescription = null, tint = Color.White)
                                 }
                             }
-                        },
-                        dismissContent = {
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = Cream),
-                                modifier = Modifier
+                        }
+                    ) {
+                        Card(
+                            colors    = CardDefaults.cardColors(containerColor = Cream),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            shape     = RoundedCornerShape(12.dp),
+                            modifier  = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp, horizontal = 8.dp)
+                        ) {
+                            Row(
+                                Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                shape = RoundedCornerShape(12.dp)
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment   = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    item.imageUrl?.let { url ->
-                                        AsyncImage(
-                                            model = url,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .size(40.dp)
-                                                .clip(CircleShape),
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                    }
-                                    Text(
-                                        item.name,
-                                        modifier = Modifier.weight(1f),
-                                        fontWeight = FontWeight.Bold
+                                item.imageUrl?.let { url ->
+                                    AsyncImage(
+                                        model = url,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
                                     )
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        IconButton(onClick = {
-                                            val updated = item.copy(quantity = item.quantity + 1)
-                                            inventoryItems[index] = updated
-                                            userId?.let {
-                                                FirebaseDatabaseManager.updateInventoryItem(
-                                                    it,
-                                                    updated
-                                                )
-                                            }
-                                        }) {
-                                            Icon(Icons.Default.Add, contentDescription = "Increase")
-                                        }
+                                    Spacer(Modifier.width(8.dp))
+                                }
 
-                                        Text(
-                                            "${item.quantity}",
-                                            fontSize = 20.sp,
-                                            modifier = Modifier.padding(8.dp)
-                                        )
+                                Text(item.name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
 
-                                        IconButton(onClick = {
-                                            if (item.quantity > 1) {
-                                                val updated =
-                                                    item.copy(quantity = item.quantity - 1)
-                                                inventoryItems[index] = updated
-                                                userId?.let { uid ->
-                                                    FirebaseDatabaseManager.updateInventoryItem(
-                                                        uid,
-                                                        updated
-                                                    )
-                                                }
-                                            } else {
-                                                pendingDelete = item
-                                            }
-                                        }) {
-                                            Icon(
-                                                Icons.Default.Delete,
-                                                contentDescription = "Decrease"
-                                            )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // + button
+                                    IconButton(onClick = {
+                                        val updated = item.copy(quantity = item.quantity + 1)
+                                        userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
+                                    }) {
+                                        Icon(Icons.Default.Add, contentDescription = "Increase")
+                                    }
+
+                                    Text(item.quantity.toString(), fontSize = 20.sp, modifier = Modifier.padding(8.dp))
+
+                                    // – button
+                                    IconButton(onClick = {
+                                        if (item.quantity > 1) {
+                                            val updated = item.copy(quantity = item.quantity - 1)
+                                            userId?.let { FirebaseDatabaseManager.updateInventoryItem(it, updated) }
+                                        } else {
+                                            pendingDelete = item
                                         }
+                                    }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Decrease")
                                     }
                                 }
                             }
-                        },
-                    )
+                        }
+                    }
                 }
             }
         }
-        // only show when an item is pending
-        pendingDelete?.let { itemToDelete ->
+
+        // Delete confirmation
+        pendingDelete?.let { target ->
             AlertDialog(
                 onDismissRequest = { pendingDelete = null },
-                title = { Text("Remove “${itemToDelete.name}”?") },
-                text = { Text("Do you want to put it on your shopping list before deleting?") },
+                title   = { Text("Remove “${target.name}”?") },
+                text    = { Text("Send it to your grocery list before deleting?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        // 1) add to grocery list
-//                                FirebaseDatabaseManager.addGroceryListItem(
-//                                    userId!!,
-//                                    GroceryItem(
-//                                        name = itemToDelete.name,
-//                                        quantity = itemToDelete.quantity,
-//                                        estimatedPrice = 0.0, // or pull from your InventoryItem if you track price
-//                                        imageUrl = itemToDelete.imageUrl,
-//                                        upc = itemToDelete.upc,
-//                                    ),
-//                                )
-                        // 2) delete from inventory
-                        FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { success, _ ->
-                            if (!success) Log.e("InventoryScreen", "delete failed")
+                        userId?.let { uid ->
+                            val grocery = GroceryItem(
+                                id             = target.id,
+                                name           = target.name,
+                                quantity       = 1,
+                                upc            = target.upc,
+                                imageUrl       = target.imageUrl,
+                                estimatedPrice = 0.0
+                            )
+                            FirebaseDatabaseManager.addGroceryListItem(uid, grocery)
+                            FirebaseDatabaseManager.removeInventoryItem(uid, target.id!!)
                         }
-                        val groceryItemToAdd = GroceryItem(id = itemToDelete.id, name = itemToDelete.name, quantity = 1, upc = itemToDelete.upc, imageUrl = itemToDelete.imageUrl )
-                        if (itemToDelete.upc != null) {
-                            FirebaseDatabaseManager.addGroceryListItem(userId, groceryItemToAdd)
-                            navController.navigate("grocery_list")
-                        } else {
-                        // 3) navigate to your AddItemScreen, passing fields as parameters
-                        navController.navigate(
-                            "add_item?" +
-                                "productName=${Uri.encode(itemToDelete.name)}" +
-                                "&productUpc=" +
-                                "&productPrice=" + // leave blank or supply default
-                                "&productImageUri=", // leave blank or supply default
-                        )}
-
                         pendingDelete = null
+                        navController.navigate("grocery_list")
                     }) {
                         Text("Yes")
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = {
-                        // just delete without adding to list
-                        FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { _, _ -> }
+                        userId?.let { FirebaseDatabaseManager.removeInventoryItem(it, target.id!!) }
                         pendingDelete = null
                     }) {
                         Text("No")
                     }
-                },
+                }
             )
         }
     }
-
 }
+
+//@OptIn(ExperimentalMaterialApi::class)
+//@Composable
+//fun InventoryScreen(
+//    authViewModel: AuthViewModel,
+//    navController: NavController,
+//    onAvatarClick: () -> Unit
+//) {
+//    // Get the current user's UID.
+//    val currentUser = FirebaseAuth.getInstance().currentUser
+//    val userId = currentUser?.uid
+//    // Lottie Load up
+//    val signoutAni by rememberLottieComposition(LottieCompositionSpec.Asset("animations/signout.json"))
+//    val prevss = remember { mutableStateListOf<DataSnapshot>() }
+//    val interactionSource = remember { MutableInteractionSource() }
+//    val isPressed by interactionSource.collectIsPressedAsState()
+//    val progress_so by animateLottieCompositionAsState(
+//        composition = signoutAni,
+//        isPlaying = isPressed,
+//        restartOnPlay = true,
+//        iterations = LottieConstants.IterateForever,
+//    )
+//    // List to store inventory items from Firebase.
+//
+//    val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
+////    Log.i("inventoritem: ", inventoryItems.joinToString())
+//    // NEW: which item is awaiting the “add to shopping list?” prompt?
+//    var pendingDelete by remember { mutableStateOf<InventoryItem?>(null) }
+//    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
+//
+//    // Listen for changes in the inventory data from the database.
+////    LaunchedEffect(userId) {
+////        if (userId != null) {
+////            val newItems = mutableListOf<InventoryItem>()
+////
+////            val listener =
+////                object : ValueEventListener {
+////                    override fun onDataChange(snapshot: DataSnapshot) {
+//////                        Log.i("onchanged Call", "being printed")
+////
+////                        inventoryItems.clear()
+////                        // Iterate through each child in the inventory node.
+////                        snapshot.children.forEach { dataSnap ->
+////                            val item = dataSnap.getValue(InventoryItem::class.java)
+////
+////                            if (item != null) {
+////                                newItems.add(item)
+////                            }
+////                        }
+////                        if (inventoryItems != newItems) {
+////                            inventoryItems.clear()
+////                            inventoryItems.addAll(newItems)
+////                        }
+////                    }
+////
+////                    override fun onCancelled(error: DatabaseError) {
+////                        Log.e("InventoryScreen", "Data listener error: ${error.message}")
+////                    }
+////                }
+////            FirebaseDatabaseManager.listenToInventory(userId, listener)
+////        } else {
+////            inventoryItems.clear()
+////            return@LaunchedEffect
+////        }
+////    }
+//
+//    LaunchedEffect(userId) {
+//        if (userId != null) {
+//            val listener = object : ValueEventListener {
+//                override fun onDataChange(snapshot: DataSnapshot) {
+//                    // build a fresh list with unique IDs from snapshot.key
+//                    val newItems = snapshot.children.mapNotNull { dataSnap ->
+//                        dataSnap.getValue(InventoryItem::class.java)
+//                            ?.copy(id = dataSnap.key)    // override the data-class ID field
+//                    }
+//                    // now replace your state list wholesale
+//                    inventoryItems.apply {
+//                        clear()
+//                        addAll(newItems)
+//                    }
+//                }
+//                override fun onCancelled(e: DatabaseError) { /*…*/ }
+//            }
+//            FirebaseDatabaseManager.listenToInventory(userId, listener)
+//        }
+//    }
+//
+//
+//    // Compute total quantity for the usage bar.
+//    val totalQuantity = inventoryItems.sumOf { it.quantity }
+//    // Create a list of (item name, percentage of total) pairs.
+//    val percentageList =
+//        if (totalQuantity == 0) {
+//            emptyList<Pair<String, Float>>()
+//        } else {
+//            inventoryItems.map { it.name to (it.quantity.toFloat() / totalQuantity) }
+//        }
+//    // Shuffle colors for visual variety.
+//    val shuffledColors = remember { colors.shuffled() }
+//    // when (info) {
+//    // WindowWidthSizeClass.COMPACT -> {
+//    Column(
+//        modifier =
+//            Modifier
+//                .fillMaxSize()
+//                .padding(16.dp),
+//        verticalArrangement = Arrangement.spacedBy(8.dp),
+//    ) {
+//        // Top bar with title and sign out button.
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            verticalAlignment = Alignment.CenterVertically,
+//        ) {
+//            Text(
+//                text = "Pantry",
+//                fontSize = 30.sp,
+//                fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
+//                fontWeight = FontWeight.Bold,
+//                modifier = Modifier.weight(1f),
+//            )
+////            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
+//            // Get the shared ProfileViewModel to read avatarUrl
+//            val profileViewModel: ProfileViewModel = viewModel()
+//            val avatarUrl by profileViewModel.avatarUrl.collectAsState()
+//
+//// Show avatar instead of text
+//            AsyncImage(
+//                model = avatarUrl,
+//                contentDescription = "Profile Avatar",
+//                placeholder = painterResource(R.drawable.default_avatar),
+//                error = painterResource(R.drawable.default_avatar),
+//                fallback = painterResource(R.drawable.default_avatar),
+//                modifier = Modifier
+//                    .size(36.dp)
+//                    .clip(CircleShape)
+//                    .clickable {
+//                        onAvatarClick()
+//                    }
+//            )
+//        }
+//        Spacer(modifier = Modifier.height(20.dp))
+//        // Display current usage as a horizontal progress bar.
+//        Row(
+//            modifier =
+//                Modifier
+//                    .fillMaxWidth()
+//                    .height(20.dp),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.SpaceBetween,
+//        ) {
+////            Text(
+////                "Current Usage:",
+////                fontSize = 14.sp,
+////                color = Color(0xFF29b34e),
+////            )
+//            Row(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
+//                percentageList.forEachIndexed { index, (name, per) ->
+//                    val color = hexToColor(shuffledColors[index % shuffledColors.size])
+//                    Box(
+//                        modifier =
+//                            Modifier
+//                                .fillMaxHeight()
+//                                .fillMaxWidth(per)
+//                                .background(color = color),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text(
+//                            text = name,
+//                            fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
+//                            fontSize = 10.sp,
+//                            textAlign = TextAlign.Center,
+//                            modifier = Modifier.padding(2.dp),
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//
+//        if (inventoryItems.isEmpty()) {
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(16.dp),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Text(
+//                    text = "Your inventory is empty!\nAdd items using the + button on the bottom right.",
+//                    fontSize = 20.sp,
+//                    textAlign = TextAlign.Center,
+//                    fontWeight = FontWeight.Medium,
+//                    fontFamily = FontFamily(Font(resId = R.font.nunitobold))
+//                )
+//            }
+//        } else {
+//            // List the inventory items with update buttons.
+//            LazyColumn {
+//                itemsIndexed(inventoryItems, key   = { index, item -> "${item.id}-$index" }) { index, item ->
+//                    val dismissState =
+//                        rememberDismissState(
+//                            // leave initialValue at default Idle
+//                            confirmStateChange = { state: DismissValue ->
+//                                if (state == DismissValue.DismissedToStart) {
+//                                    // 1. Remove locally
+//                                    // inventoryItems.remove(item)
+//                                    // 2. Tell Firebase to delete
+//                                    // userId?.let { uid ->
+//                                    //    FirebaseDatabaseManager.removeInventoryItem(uid, item.id!!) { success, _ ->
+//                                    //        if (!success) Log.e("InventoryScreen", "Failed to remove ${item.id}")
+//                                    //    }
+//                                    // }
+//                                    // ask the user if they want to add it to the shopping list:
+//                                    pendingDelete = item
+//                                    true
+//                                } else {
+//                                    false
+//                                }
+//                            },
+//                        )
+//
+//                    SwipeToDismiss(
+//                        state = dismissState,
+//                        directions = setOf(DismissDirection.EndToStart),
+//                        background = {
+//                            // Determine the background color:
+//                            // – RED when the user is actively swiping to the left (EndToStart)
+//                            // – TRANSPARENT otherwise
+//                            val bgColor =
+//                                when (dismissState.dismissDirection) {
+//                                    DismissDirection.EndToStart -> Color.Red
+//                                    else -> Color.Transparent
+//                                }
+//
+//                            Box(
+//                                Modifier
+//                                    .fillMaxSize()
+//                                    .background(bgColor)
+//                                    // only add padding when showing the red background
+//                                    .padding(end = if (bgColor == Color.Red) 20.dp else 0.dp),
+//                                contentAlignment = Alignment.CenterEnd,
+//                            ) {
+//                                if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+//                                    Icon(
+//                                        Icons.Default.Delete,
+//                                        contentDescription = "Delete",
+//                                        tint = Color.White,
+//                                    )
+//                                }
+//                            }
+//                        },
+//                        dismissContent = {
+//                            Card(
+//                                colors = CardDefaults.cardColors(containerColor = Cream),
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+//                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+//                                shape = RoundedCornerShape(12.dp)
+//                            ) {
+//                                Row(
+//                                    Modifier
+//                                        .fillMaxWidth()
+//                                        .padding(16.dp),
+//                                    horizontalArrangement = Arrangement.SpaceBetween,
+//                                    verticalAlignment = Alignment.CenterVertically,
+//                                ) {
+//                                    item.imageUrl?.let { url ->
+//                                        AsyncImage(
+//                                            model = url,
+//                                            contentDescription = null,
+//                                            modifier = Modifier
+//                                                .size(40.dp)
+//                                                .clip(CircleShape),
+//                                        )
+//                                        Spacer(Modifier.width(8.dp))
+//                                    }
+//                                    Text(
+//                                        item.name,
+//                                        modifier = Modifier.weight(1f),
+//                                        fontWeight = FontWeight.Bold
+//                                    )
+//                                    Row(verticalAlignment = Alignment.CenterVertically) {
+//                                        IconButton(onClick = {
+//                                            val updated = item.copy(quantity = item.quantity + 1)
+//                                            inventoryItems[index] = updated
+//                                            userId?.let {
+//                                                FirebaseDatabaseManager.updateInventoryItem(
+//                                                    it,
+//                                                    updated
+//                                                )
+//                                            }
+//                                        }) {
+//                                            Icon(Icons.Default.Add, contentDescription = "Increase")
+//                                        }
+//
+//                                        Text(
+//                                            "${item.quantity}",
+//                                            fontSize = 20.sp,
+//                                            modifier = Modifier.padding(8.dp)
+//                                        )
+//
+//                                        IconButton(onClick = {
+//                                            if (item.quantity > 1) {
+//                                                val updated =
+//                                                    item.copy(quantity = item.quantity - 1)
+//                                                inventoryItems[index] = updated
+//                                                userId?.let { uid ->
+//                                                    FirebaseDatabaseManager.updateInventoryItem(
+//                                                        uid,
+//                                                        updated
+//                                                    )
+//                                                }
+//                                            } else {
+//                                                pendingDelete = item
+//                                            }
+//                                        }) {
+//                                            Icon(
+//                                                Icons.Default.Delete,
+//                                                contentDescription = "Decrease"
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        },
+//                    )
+//                }
+//            }
+//        }
+//        // only show when an item is pending
+//        pendingDelete?.let { itemToDelete ->
+//            AlertDialog(
+//                onDismissRequest = { pendingDelete = null },
+//                title = { Text("Remove “${itemToDelete.name}”?") },
+//                text = { Text("Do you want to put it on your shopping list before deleting?") },
+//                confirmButton = {
+//                    TextButton(onClick = {
+//                        // 1) add to grocery list
+////                                FirebaseDatabaseManager.addGroceryListItem(
+////                                    userId!!,
+////                                    GroceryItem(
+////                                        name = itemToDelete.name,
+////                                        quantity = itemToDelete.quantity,
+////                                        estimatedPrice = 0.0, // or pull from your InventoryItem if you track price
+////                                        imageUrl = itemToDelete.imageUrl,
+////                                        upc = itemToDelete.upc,
+////                                    ),
+////                                )
+//                        // 2) delete from inventory
+//                        FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { success, _ ->
+//                            if (!success) Log.e("InventoryScreen", "delete failed")
+//                        }
+//                        val groceryItemToAdd = GroceryItem(id = itemToDelete.id, name = itemToDelete.name, quantity = 1, upc = itemToDelete.upc, imageUrl = itemToDelete.imageUrl )
+//                        if (itemToDelete.upc != null) {
+//                            FirebaseDatabaseManager.addGroceryListItem(userId, groceryItemToAdd)
+//                            navController.navigate("grocery_list")
+//                        } else {
+//                        // 3) navigate to your AddItemScreen, passing fields as parameters
+//                        navController.navigate(
+//                            "add_item?" +
+//                                "productName=${Uri.encode(itemToDelete.name)}" +
+//                                "&productUpc=" +
+//                                "&productPrice=" + // leave blank or supply default
+//                                "&productImageUri=", // leave blank or supply default
+//                        )}
+//
+//                        pendingDelete = null
+//                    }) {
+//                        Text("Yes")
+//                    }
+//                },
+//                dismissButton = {
+//                    TextButton(onClick = {
+//                        // just delete without adding to list
+//                        FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { _, _ -> }
+//                        pendingDelete = null
+//                    }) {
+//                        Text("No")
+//                    }
+//                },
+//            )
+//        }
+//    }
+//
+//}
