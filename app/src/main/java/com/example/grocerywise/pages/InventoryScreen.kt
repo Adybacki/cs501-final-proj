@@ -73,7 +73,6 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
-import androidx.navigation.NavController
 import com.example.grocerywise.ApiClient
 import com.example.grocerywise.ProductLookupRequest
 import com.example.grocerywise.ProductLookupResponse
