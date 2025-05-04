@@ -75,6 +75,7 @@ fun HomePage(
 
 // 4. Combined layout only on tablet+landscape
     val useCombinedLayout = isLandscape && isTabletWidth
+    val isTabletPortrait = isTabletWidth && !isLandscape
 
     // 3. Create a separate NavController for the bottom tabs
     val bottomNavController = rememberNavController()
@@ -89,6 +90,24 @@ fun HomePage(
 
     // 5. Floating menu state
     val showMenu = remember { mutableStateOf(false) }
+
+    LaunchedEffect(useCombinedLayout, isTabletPortrait) {
+        val currentRoute = bottomNavController.currentDestination?.route
+
+        if (useCombinedLayout && currentRoute != "pantry_shopping_combined") {
+            bottomNavController.navigate("pantry_shopping_combined") {
+                popUpTo(bottomNavController.graph.startDestinationId) { inclusive = true }
+            }
+        } else if (isTabletPortrait && currentRoute != "tablet_portrait") {
+            bottomNavController.navigate("tablet_portrait") {
+                popUpTo(bottomNavController.graph.startDestinationId) { inclusive = true }
+            }
+        } else if (!useCombinedLayout && !isTabletPortrait && currentRoute == "pantry_shopping_combined") {
+            bottomNavController.navigate("inventory") {
+                popUpTo(bottomNavController.graph.startDestinationId) { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -110,7 +129,7 @@ fun HomePage(
                         // Scan barcode button
                         FloatingActionButton(
                             containerColor = Sage,
-                            contentColor = androidx.compose.ui.graphics.Color.White,
+                            contentColor = Color.White,
                             onClick = {
                                 showMenu.value = false
                                 scanner.startScan()
@@ -136,7 +155,7 @@ fun HomePage(
                         // Manual add button
                         FloatingActionButton(
                             containerColor = Sage,
-                            contentColor = androidx.compose.ui.graphics.Color.White,
+                            contentColor = Color.White,
                             onClick = {
                                 showMenu.value = false
                                 bottomNavController.navigate("add_item")
@@ -164,7 +183,10 @@ fun HomePage(
         // 6. NavHost for bottom tabs (includes our new combined screen)
         NavHost(
             navController = bottomNavController,
-            startDestination = if (useCombinedLayout) "pantry_shopping_combined" else "inventory",
+            startDestination = when {
+                useCombinedLayout -> "pantry_shopping_combined"
+                isTabletPortrait -> "tablet_portrait"
+                else -> "inventory" },
             modifier = Modifier.padding(innerPadding)
         ) {
             // Inventory / Pantry (single-pane)
@@ -199,6 +221,14 @@ fun HomePage(
                     bottomNavController= bottomNavController,
                     onAvatarClick      = { navController.navigate("profile") }
 
+                )
+            }
+
+            composable("tablet_portrait") {
+                PantryShoppingListScreenVertical(
+                    authViewModel = authViewModel,
+                    bottomNavController = bottomNavController,
+                    onAvatarClick = {navController.navigate("profile")}
                 )
             }
 

@@ -1,5 +1,6 @@
 package com.example.grocerywise.pages
 
+import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -72,6 +74,11 @@ fun GroceryListScreen(
     val groceryItems = remember { mutableStateListOf<GroceryItem>() }
     val showEditDialog = remember { mutableStateOf<GroceryItem?>(null) }
 
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val screenWidthDp = configuration.screenWidthDp
+    val isTabletWidth = screenWidthDp >= 600
+
     // Listen for changes in the inventory data from the database.
     LaunchedEffect(userId) {
         if (userId != null) {
@@ -113,19 +120,21 @@ fun GroceryListScreen(
             val avatarUrl by profileViewModel.avatarUrl.collectAsState()
 
 // Show avatar instead of text
-            AsyncImage(
-                model = avatarUrl,
-                contentDescription = "Profile Avatar",
-                placeholder = painterResource(R.drawable.default_avatar),
-                error = painterResource(R.drawable.default_avatar),
-                fallback = painterResource(R.drawable.default_avatar),
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        onAvatarClick()
-                    }
-            )
+            if (!isTabletWidth && !isLandscape) {
+                AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = "Profile Avatar",
+                    placeholder = painterResource(R.drawable.default_avatar),
+                    error = painterResource(R.drawable.default_avatar),
+                    fallback = painterResource(R.drawable.default_avatar),
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable {
+                            onAvatarClick()
+                        }
+                )
+            }
 
 
             Spacer(modifier = Modifier.height(8.dp))
