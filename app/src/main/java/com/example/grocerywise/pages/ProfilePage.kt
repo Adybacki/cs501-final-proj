@@ -19,11 +19,13 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.grocerywise.ProfileViewModel
 import com.example.grocerywise.R
+import com.example.grocerywise.AuthViewModel
 
 @Composable
 fun ProfilePage(
     navController: NavController,
-    profileViewModel: ProfileViewModel = viewModel()
+    profileViewModel: ProfileViewModel = viewModel(),
+    authViewModel: AuthViewModel,
 ) {
     // 1) Obtain the avatar URL from ViewModel
     val avatarUrl by profileViewModel.avatarUrl.collectAsState()
@@ -63,12 +65,15 @@ fun ProfilePage(
 
         // -- Log out button --
         Button(onClick = {
-            profileViewModel.signOut()
+            // 1) Sign the user out
+            authViewModel.signout()
+            // 2) Navigate back to the login screen and clear Profile from the backstack
             navController.navigate("login") {
                 popUpTo("profile") { inclusive = true }
             }
         }) {
             Text("Sign Out")
         }
+
     }
 }
