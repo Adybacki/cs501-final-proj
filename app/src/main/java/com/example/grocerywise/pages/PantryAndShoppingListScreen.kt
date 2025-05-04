@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
 import com.example.grocerywise.AuthViewModel
 
 @Composable
@@ -28,9 +30,7 @@ fun PantryAndShoppingListScreen(
                 .fillMaxHeight()
         ) {
             InventoryScreen(
-                authViewModel = authViewModel,
-                navController   = bottomNavController,
-                onAvatarClick   = onAvatarClick
+                onAvatarClick   = onAvatarClick,
             )
         }
 

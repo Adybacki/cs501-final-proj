@@ -170,8 +170,6 @@ fun HomePage(
             // Inventory / Pantry (single-pane)
             composable("inventory") {
                 InventoryScreen(
-                    navController = bottomNavController,
-                    authViewModel = authViewModel,
                     onAvatarClick = { navController.navigate("profile") },
 
                 )
