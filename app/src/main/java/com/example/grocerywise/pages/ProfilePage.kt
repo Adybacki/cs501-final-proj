@@ -38,17 +38,17 @@ fun ProfilePage(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // -- Display current avatar or default, clickable to change --
+        // -- Avatar image (click to change) --
         AsyncImage(
             model = avatarUrl,
             contentDescription = "Profile Avatar",
             placeholder = painterResource(R.drawable.default_avatar),
-            error = painterResource(R.drawable.default_avatar),
-            fallback = painterResource(R.drawable.default_avatar),
+            error       = painterResource(R.drawable.default_avatar),
+            fallback    = painterResource(R.drawable.default_avatar),
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
@@ -60,20 +60,27 @@ fun ProfilePage(
         Button(onClick = { picker.launch("image/*") }) {
             Text("Change Avatar")
         }
+        Spacer(Modifier.height(24.dp))
 
-        Spacer(Modifier.height(32.dp))
+        // -- Back button --
+        Button(onClick = {
+            navController.popBackStack()   // go back to the previous screen
+        }) {
+            Text("Back")
+        }
+        Spacer(Modifier.height(16.dp))
 
         // -- Log out button --
         Button(onClick = {
             // 1) Sign the user out
             authViewModel.signout()
-            // 2) Navigate back to the login screen and clear Profile from the backstack
+            // 2) Navigate back to the login screen and clear this Profile from the backstack
             navController.navigate("login") {
                 popUpTo("profile") { inclusive = true }
             }
         }) {
             Text("Sign Out")
         }
-
     }
 }
+
