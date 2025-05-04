@@ -25,8 +25,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
@@ -41,7 +39,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
@@ -53,16 +50,12 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.example.grocerywise.ProfileViewModel
-import androidx.navigation.NavController
 
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun GroceryListScreen(
-    authViewModel: AuthViewModel,
-    navController: NavController,
     onAvatarClick: () -> Unit
 ) {
 
@@ -114,13 +107,12 @@ fun GroceryListScreen(
             Text(text = "Grocery List", fontSize = 30.sp, fontWeight = FontWeight.W900, modifier = Modifier.weight(1f).fillMaxWidth(), fontFamily = FontFamily(
                 Font(resId = R.font.nunitobold),
             ),)
-//            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
             // Get the shared ProfileViewModel to read avatarUrl
             val profileViewModel: ProfileViewModel = viewModel()
             val avatarUrl by profileViewModel.avatarUrl.collectAsState()
 
 // Show avatar instead of text
-            if (!isTabletWidth && !isLandscape) {
+            if (!isTabletWidth || isLandscape) {
                 AsyncImage(
                     model = avatarUrl,
                     contentDescription = "Profile Avatar",
@@ -349,6 +341,10 @@ fun EditGroceryItemDialog(
         text = {
             Column {
                 OutlinedTextField(
+                    colors =
+                    OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Sage,
+                    ),
                     value = quantity.value,
                     onValueChange = { newValue ->
                         // Allow only digits and values up to 99.
@@ -360,6 +356,10 @@ fun EditGroceryItemDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
                 OutlinedTextField(
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Sage,
+                            ),
                     value = price.value,
                     onValueChange = { newValue ->
                         // Allow only valid price formats (up to 7 digits and 2 decimal places).
@@ -368,7 +368,7 @@ fun EditGroceryItemDialog(
                             price.value = newValue
                         }
                     },
-                    label = { Text("Estimated Price") }
+                    label = { Text("Estimated Price")}
                 )
             }
         },
@@ -379,7 +379,7 @@ fun EditGroceryItemDialog(
                     estimatedPrice = price.value.toDoubleOrNull() ?: item.estimatedPrice
                 )
                 onConfirm(updated)
-            }) {
+            }, colors = ButtonDefaults.buttonColors(containerColor = Sage)) {
                 Text("Save")
             }
         },
@@ -387,6 +387,6 @@ fun EditGroceryItemDialog(
             OutlinedButton(onClick = onDismiss) {
                 Text("Cancel")
             }
-        }
+        }, containerColor = Cream
     )
 }

@@ -1,7 +1,6 @@
 package com.example.grocerywise.pages
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.res.Configuration
 import android.net.Uri
 import android.util.Log
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -34,7 +32,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.window.core.layout.WindowWidthSizeClass
 import com.example.grocerywise.ApiClient
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
@@ -200,8 +197,6 @@ fun HomePage(
             // Grocery List (single-pane)
             composable("grocery_list") {
                 GroceryListScreen(
-                    navController = bottomNavController,
-                    authViewModel = authViewModel,
                     onAvatarClick = { navController.navigate("profile") }
                 )
             }

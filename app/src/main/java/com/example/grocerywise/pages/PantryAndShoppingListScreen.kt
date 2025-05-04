@@ -46,8 +46,6 @@ fun PantryAndShoppingListScreen(
                 .fillMaxHeight()
         ) {
             GroceryListScreen(
-                authViewModel = authViewModel,
-                navController   = bottomNavController,
                 onAvatarClick   = onAvatarClick
             )
         }
