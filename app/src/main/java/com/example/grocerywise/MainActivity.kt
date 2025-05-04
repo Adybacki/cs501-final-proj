@@ -18,10 +18,13 @@ class MainActivity : ComponentActivity() {
         val authViewModel: AuthViewModel by viewModels()
         setContent {
             GroceryWiseTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    AppNavigation(modifier = Modifier.padding(innerPadding), authViewModel = authViewModel)
-                }
+                // ✅ No outer Scaffold – AppNavigation (and HomePage) brings its own
+                AppNavigation(
+                    modifier     = Modifier.fillMaxSize(),
+                    authViewModel = authViewModel
+                )
             }
         }
+
     }
 }

@@ -83,7 +83,6 @@ fun Recipe(
     navController: NavController,
     authViewModel: AuthViewModel,
 ) {
-    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
     var searchVal by remember { mutableStateOf("") }
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val categorization: MutableList<String> = remember { mutableStateListOf() }
@@ -148,8 +147,7 @@ fun Recipe(
         }
     }
 
-    when (info) {
-        WindowWidthSizeClass.COMPACT -> {
+
             val currentDisplay = touchedDisplay
             if (currentDisplay != null) {
                 LazyColumn(
@@ -424,6 +422,5 @@ fun Recipe(
                     }
                 }
             }
-        }
+
     }
-}
