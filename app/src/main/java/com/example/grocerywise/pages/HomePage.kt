@@ -164,7 +164,7 @@ fun HomePage(
         // 6. NavHost for bottom tabs (includes our new combined screen)
         NavHost(
             navController = bottomNavController,
-            startDestination = if (useCombinedLayout) "recipe" else "inventory",
+            startDestination = if (useCombinedLayout) "pantry_shopping_combined" else "inventory",
             modifier = Modifier.padding(innerPadding)
         ) {
             // Inventory / Pantry (single-pane)
@@ -198,7 +198,9 @@ fun HomePage(
             composable("pantry_shopping_combined") {
                 PantryAndShoppingListScreen(
                     authViewModel = authViewModel,
-                    navController = navController
+                    bottomNavController= bottomNavController,
+                    onAvatarClick      = { navController.navigate("profile") }
+
                 )
             }
 

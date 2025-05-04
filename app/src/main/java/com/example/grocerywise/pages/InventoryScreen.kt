@@ -357,7 +357,7 @@ fun InventoryScreen(
                             FirebaseDatabaseManager.removeInventoryItem(uid, target.id!!)
                         }
                         pendingDelete = null
-                        navController.navigate("grocery_list")
+
                     }) {
                         Text("Yes")
                     }
