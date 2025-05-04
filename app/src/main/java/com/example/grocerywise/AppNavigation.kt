@@ -15,6 +15,8 @@ import com.example.grocerywise.pages.Recipe
 import com.example.grocerywise.pages.SignupPage
 import com.google.firebase.Firebase
 import com.google.firebase.database.database
+import com.example.grocerywise.pages.ProfilePage
+
 
 @Composable
 fun AppNavigation(
@@ -45,8 +47,10 @@ fun AppNavigation(
         composable("recipe") {
             Recipe(navController, authViewModel)
         }
+        composable("profile") {
+            ProfilePage(navController = navController, authViewModel = authViewModel)
+        }
 
-        // 匹配 HomePage 和 getProductDetails 中的跳转
         composable(
             route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",
             arguments =

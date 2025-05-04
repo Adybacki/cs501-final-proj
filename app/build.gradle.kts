@@ -61,6 +61,15 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
 
+    // Firebase BoM to align versions
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    // Firebase Storage KTX library for Kotlin
+    implementation("com.google.firebase:firebase-storage-ktx")
+    // (Optional) Firebase Realtime Database (if not already added for your user profiles)
+    implementation("com.google.firebase:firebase-database-ktx")
+    // Coil image loading library for Compose (for displaying avatar)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
     implementation(libs.androidx.navigation.compose)
     implementation(libs.firebase.auth)
     implementation(libs.androidx.credentials)
@@ -90,4 +99,6 @@ dependencies {
     implementation("com.google.firebase:firebase-database")
     implementation("com.squareup.moshi:moshi-kotlin:1.13.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+
+
 }

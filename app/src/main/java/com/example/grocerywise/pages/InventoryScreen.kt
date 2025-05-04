@@ -3,6 +3,7 @@ package com.example.grocerywise.pages
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +41,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,12 +52,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
@@ -64,6 +68,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.AuthViewModel
+import com.example.grocerywise.ProfileViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
@@ -118,6 +123,7 @@ fun hexToColor(hex: String): Color {
 fun InventoryScreen(
     authViewModel: AuthViewModel,
     navController: NavController,
+    onAvatarClick: () -> Unit
 ) {
     // Get the current user's UID.
     val currentUser = FirebaseAuth.getInstance().currentUser
@@ -209,7 +215,25 @@ fun InventoryScreen(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
+//            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
+            // Get the shared ProfileViewModel to read avatarUrl
+            val profileViewModel: ProfileViewModel = viewModel()
+            val avatarUrl by profileViewModel.avatarUrl.collectAsState()
+
+// Show avatar instead of text
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = "Profile Avatar",
+                placeholder = painterResource(R.drawable.default_avatar),
+                error = painterResource(R.drawable.default_avatar),
+                fallback = painterResource(R.drawable.default_avatar),
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable {
+                        onAvatarClick()
+                    }
+            )
         }
         Spacer(modifier = Modifier.height(20.dp))
         // Display current usage as a horizontal progress bar.
