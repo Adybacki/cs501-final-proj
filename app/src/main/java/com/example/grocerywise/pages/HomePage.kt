@@ -1,6 +1,8 @@
 package com.example.grocerywise.pages
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.res.Configuration
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -23,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -31,6 +34,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.window.core.layout.WindowWidthSizeClass
 import com.example.grocerywise.ApiClient
 import com.example.grocerywise.AuthState
 import com.example.grocerywise.AuthViewModel
@@ -52,34 +56,50 @@ fun HomePage(
     navController: NavController,
     authViewModel: AuthViewModel,
 ) {
+    // 1. Redirect to login if unauthenticated
     val authState = authViewModel.authState.observeAsState()
-
     LaunchedEffect(authState.value) {
-        when (authState.value) {
-            is AuthState.Unauthenticated -> navController.navigate("login")
-            else -> Unit
+        if (authState.value is AuthState.Unauthenticated) {
+            navController.navigate("login")
         }
     }
 
+    // 2. Detect “tablet width” by raw dp
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+// treat 600 dp+ as “tablet”
+    val isTabletWidth = screenWidthDp >= 600
+
+// 3. Detect landscape
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+// 4. Combined layout only on tablet+landscape
+    val useCombinedLayout = isLandscape && isTabletWidth
+
+    // 3. Create a separate NavController for the bottom tabs
+    val bottomNavController = rememberNavController()
+
+    // 4. Barcode scanner setup
     val context = LocalContext.current
-    val navigationController = rememberNavController()
-
-    val options =
-        GmsBarcodeScannerOptions
-            .Builder()
-            .setBarcodeFormats(
-                Barcode.FORMAT_UPC_A,
-                Barcode.FORMAT_UPC_E,
-            ).enableAutoZoom()
-            .build()
-
+    val options = GmsBarcodeScannerOptions.Builder()
+        .setBarcodeFormats(Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E)
+        .enableAutoZoom()
+        .build()
     val scanner = GmsBarcodeScanning.getClient(context)
 
-    // State for showing menu
+    // 5. Floating menu state
     val showMenu = remember { mutableStateOf(false) }
 
     Scaffold(
-        bottomBar = { BottomNavBar(navigationController) },
+        modifier = modifier,
+        // Pass our flag into BottomNavBar so it can switch between 2-item and 3-item modes
+        bottomBar = {
+            BottomNavBar(
+                navController = bottomNavController,
+                useCombinedLayout = useCombinedLayout
+            )
+        },
+        // Keep your existing FAB menu—it will float over whichever screen is active
         floatingActionButton = {
             Column {
                 if (showMenu.value) {
@@ -87,106 +107,124 @@ fun HomePage(
                         modifier = Modifier.padding(bottom = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        FloatingActionButton( containerColor = Sage, contentColor = Color.White,
+                        // Scan barcode button
+                        FloatingActionButton(
+                            containerColor = Sage,
+                            contentColor = androidx.compose.ui.graphics.Color.White,
                             onClick = {
                                 showMenu.value = false
-                                // Inside the barcode scanning success callback
-                                scanner
-                                    .startScan()
+                                scanner.startScan()
                                     .addOnSuccessListener { barcode ->
-                                        Toast.makeText(context, "Scanned: ${barcode.rawValue}", Toast.LENGTH_LONG).show()
-                                        barcode.rawValue?.let { upcCode ->
-                                            getProductDetails(upcCode, navigationController) // Passing navController to getProductDetails
+                                        barcode.rawValue?.let { upc ->
+                                            getProductDetails(upc, bottomNavController)
                                         } ?: run {
-                                            Toast.makeText(context, "Invalid barcode scanned", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, "Invalid barcode", Toast.LENGTH_SHORT).show()
                                         }
-                                    }.addOnFailureListener { e ->
-                                        Toast.makeText(context, "Scan failed: ${e.message}", Toast.LENGTH_LONG).show()
                                     }
-                            },
+                                    .addOnFailureListener {
+                                        Toast.makeText(context, "Scan failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                            }
                         ) {
                             Icon(
                                 modifier = Modifier.size(24.dp),
                                 painter = painterResource(R.drawable.icons8_barcode_96),
-                                contentDescription = "Scan Barcode",
-                                tint = Color.White,
+                                contentDescription = "Scan Barcode"
                             )
                         }
-                        FloatingActionButton(containerColor = Sage, contentColor = Color.White,
+
+                        // Manual add button
+                        FloatingActionButton(
+                            containerColor = Sage,
+                            contentColor = androidx.compose.ui.graphics.Color.White,
                             onClick = {
                                 showMenu.value = false
-                                navigationController.navigate("add_item")
-                            },
+                                bottomNavController.navigate("add_item")
+                            }
                         ) {
                             Icon(Icons.Default.AddCircle, contentDescription = "Add Manually")
                         }
                     }
                 }
-                FloatingActionButton(containerColor = Sage, contentColor = Color.White ,onClick = { showMenu.value = !showMenu.value }) {
+
+                // Toggle the mini-menu
+                FloatingActionButton(
+                    containerColor = Sage,
+                    contentColor = androidx.compose.ui.graphics.Color.White,
+                    onClick = { showMenu.value = !showMenu.value }
+                ) {
                     Icon(
                         imageVector = if (showMenu.value) Icons.Default.Delete else Icons.Default.Add,
-                        contentDescription = if (showMenu.value) "Close Menu" else "Add Item",
+                        contentDescription = if (showMenu.value) "Close Menu" else "Open Menu"
                     )
                 }
             }
-        },
-    ) { paddingValues ->
-        NavHost(navigationController, startDestination = "inventory", Modifier.padding(paddingValues)) {
+        }
+    ) { innerPadding ->
+        // 6. NavHost for bottom tabs (includes our new combined screen)
+        NavHost(
+            navController = bottomNavController,
+            startDestination = if (useCombinedLayout) "recipe" else "inventory",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            // Inventory / Pantry (single-pane)
             composable("inventory") {
                 InventoryScreen(
-                    navController = navigationController,
+                    navController = bottomNavController,
                     authViewModel = authViewModel,
-                    onAvatarClick = { navController.navigate("profile") }
+                    onAvatarClick = { navController.navigate("profile") },
+
                 )
             }
+
+            // Grocery List (single-pane)
             composable("grocery_list") {
                 GroceryListScreen(
-                    navController = navigationController,
+                    navController = bottomNavController,
                     authViewModel = authViewModel,
                     onAvatarClick = { navController.navigate("profile") }
                 )
             }
 
+            // Recipes (always full-screen)
             composable("recipe") {
                 Recipe(
-                    navController = navigationController,
+                    navController = bottomNavController,
                     authViewModel = authViewModel
-
                 )
             }
+
+            // Combined Pantry & Shopping List (tablet-landscape only)
+            composable("pantry_shopping_combined") {
+                PantryAndShoppingListScreen(
+                    authViewModel = authViewModel,
+                    navController = navController
+                )
+            }
+
+            // Add-Item route (shared)
             composable(
-                route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",
-                arguments =
-                    listOf(
-                        navArgument("productName") {
-                            nullable = true
-                            defaultValue = null
-                        },
-                        navArgument("productUpc") {
-                            nullable = true
-                            defaultValue = null
-                        },
-                        navArgument("productPrice") {
-                            nullable = true
-                            defaultValue = null
-                        },
-                        navArgument("productImageUri") {
-                            nullable = true
-                            defaultValue = null
-                        },
-                    ),
-            ) { backStackEntry ->
+                route = "add_item?productName={productName}&productUpc={productUpc}" +
+                        "&productPrice={productPrice}&productImageUri={productImageUri}",
+                arguments = listOf(
+                    navArgument("productName") { nullable = true; defaultValue = null },
+                    navArgument("productUpc")   { nullable = true; defaultValue = null },
+                    navArgument("productPrice") { nullable = true; defaultValue = null },
+                    navArgument("productImageUri") { nullable = true; defaultValue = null }
+                )
+            ) { backStack ->
                 AddItemScreen(
-                    navigationController,
-                    productName = backStackEntry.arguments?.getString("productName"),
-                    productUpc = backStackEntry.arguments?.getString("productUpc"),
-                    productPrice = backStackEntry.arguments?.getString("productPrice"),
-                    productImageUri = backStackEntry.arguments?.getString("productImageUri"),
+                    navController     = bottomNavController,
+                    productName       = backStack.arguments?.getString("productName"),
+                    productUpc        = backStack.arguments?.getString("productUpc"),
+                    productPrice      = backStack.arguments?.getString("productPrice"),
+                    productImageUri   = backStack.arguments?.getString("productImageUri")
                 )
             }
         }
     }
 }
+
 
 // Call API and handle response
 fun getProductDetails(

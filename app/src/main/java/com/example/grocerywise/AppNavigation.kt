@@ -16,7 +16,7 @@ import com.example.grocerywise.pages.SignupPage
 import com.google.firebase.Firebase
 import com.google.firebase.database.database
 import com.example.grocerywise.pages.ProfilePage
-
+import com.example.grocerywise.pages.PantryAndShoppingListScreen
 
 @Composable
 fun AppNavigation(
@@ -50,6 +50,13 @@ fun AppNavigation(
         composable("profile") {
             ProfilePage(navController = navController, authViewModel = authViewModel)
         }
+        composable("pantry_shopping_combined") {
+            PantryAndShoppingListScreen(
+                authViewModel = authViewModel,
+                navController = navController
+            )
+        }
+
 
         composable(
             route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",
