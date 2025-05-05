@@ -21,11 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -35,7 +33,11 @@ import com.example.grocerywise.R
 import com.example.grocerywise.ui.theme.Sage
 
 @Composable
-fun SignupPage(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
+fun SignupPage(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    authViewModel: AuthViewModel,
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -43,7 +45,7 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
     val context = LocalContext.current
 
     LaunchedEffect(authState.value) {
-        when (authState.value){
+        when (authState.value) {
             is AuthState.Authenticated -> navController.navigate("home")
             is AuthState.Error -> Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
             else -> Unit
@@ -53,9 +55,9 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text = "Sign up for GroceryWise", fontSize = 25.sp, fontFamily = FontFamily(Font(resId = R.font.nunitobold)),)
+        Text(text = "Sign up for GroceryWise", fontSize = 25.sp, fontFamily = FontFamily(Font(resId = R.font.nunitobold)))
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -67,9 +69,9 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
             },
             maxLines = 1,
             colors =
-            OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Sage,
-            ),
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Sage,
+                ),
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -82,16 +84,23 @@ fun SignupPage(modifier: Modifier = Modifier, navController: NavController, auth
             },
             maxLines = 1,
             colors =
-            OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Sage,
-            ),
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Sage,
+                ),
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Button( onClick = {
-            authViewModel.signup(email, password)
-        },  enabled = authState.value != AuthState.Loading && (password != "" && email != ""), colors = ButtonDefaults.buttonColors(containerColor = Sage)) {
+        Button(
+            onClick = {
+                authViewModel.signup(email, password)
+            },
+            enabled = authState.value != AuthState.Loading && (password != "" && email != ""),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = Sage,
+                ),
+        ) {
             Text("Create account")
         }
 
