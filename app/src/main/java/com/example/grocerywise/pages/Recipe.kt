@@ -6,7 +6,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,25 +18,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -59,9 +55,12 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.window.core.layout.WindowWidthSizeClass
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -69,6 +68,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieAnimatable
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.grocerywise.ApiClient
+import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.BuildConfig
 import com.example.grocerywise.ClassifyRequestBody
 import com.example.grocerywise.InventoryViewModel
@@ -76,8 +76,6 @@ import com.example.grocerywise.R
 import com.example.grocerywise.RecipeInfoResponse
 import com.example.grocerywise.RecipeResponse
 import com.example.grocerywise.models.InventoryItem
-import com.example.grocerywise.ui.theme.Cream
-import com.example.grocerywise.ui.theme.Sage
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -87,6 +85,7 @@ import java.nio.charset.StandardCharsets
 @Composable
 fun Recipe(
 ) {
+    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
     var searchVal by remember { mutableStateOf("") }
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val categorization: MutableList<String> = remember { mutableStateListOf() }
@@ -158,7 +157,8 @@ fun Recipe(
 
             inventoryItem.listIterator().forEach { item ->
                 val itemName = item.name
-                // get the classification based
+//                val upc = item.upc
+// get the classification based
                 val requestBody = ClassifyRequestBody(title = itemName)
                 val catgoryname = ApiClient.ctgService.getIg(requestBody = requestBody, apikey = apiKey)
 //                Log.i("category", itemName)
@@ -191,11 +191,11 @@ fun Recipe(
             if (currentInfoDisplay != null) {
                 LazyColumn(
                     modifier =
-                        Modifier
-                            .fillMaxSize(
-                                1f,
-                            ).padding(start = 10.dp, end = 10.dp, top = 20.dp)
-                            .background(color = Color(0xFFD5BDAF)),
+                    Modifier
+                        .fillMaxSize(
+                            1f,
+                        ).padding(start = 10.dp, end = 10.dp, top = 20.dp)
+                        .background(color = Color(0xFFD5BDAF)),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = true,
@@ -314,11 +314,11 @@ fun Recipe(
             } else if (currentDisplay != null) {
                 LazyColumn(
                     modifier =
-                        Modifier
-                            .fillMaxSize(
-                                1f,
-                            ).padding(start = 10.dp, end = 10.dp, top = 20.dp)
-                            .background(color = Color(0xFFD5BDAF)),
+                    Modifier
+                        .fillMaxSize(
+                            1f,
+                        ).padding(start = 10.dp, end = 10.dp, top = 20.dp)
+                        .background(color = Color(0xFFD5BDAF)),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = true,
@@ -377,85 +377,60 @@ fun Recipe(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                }
-            }
-
-            // Title
-            item {
-                Text(
-                    text = currentDisplay.title,
-                    fontSize = 28.sp,
-                    color = Color.DarkGray,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    fontFamily = FontFamily(Font(R.font.nunitobold))
-                )
-            }
-
-            // Image
-            item {
-                AsyncImage(
-                    model = currentDisplay.image,
-                    contentDescription = "Recipe Image",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .padding(vertical = 12.dp)
-                        .size(220.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .border(1.dp, Color.Gray, RoundedCornerShape(20.dp))
-                )
-            }
-
-            // "Ingredients" Label
-            item {
-                Text(
-                    text = "Ingredients:",
-                    fontSize = 22.sp,
-                    color = Color(0xFF444444),
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp, horizontal = 4.dp)
-                )
-            }
-
-            // Ingredient List
-            itemsIndexed(currentDisplay.usedIngredients + currentDisplay.missedIngredients) { idx, ing ->
-                Card (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    elevation = CardDefaults.cardElevation(4.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "${idx + 1}. ${ing.originalName}",
-                                fontSize = 16.sp,
-                                color = Color.DarkGray,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                    item {
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+                    item {
                         Column(
-                            horizontalAlignment = Alignment.End,
-                            modifier = Modifier.padding(start = 12.dp)
+                            modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            Text(
-                                text = "${ing.amount} ${ing.unit}",
-                                fontSize = 16.sp,
-                                color = Color.DarkGray,
-                                fontWeight = FontWeight.Normal
-                            )
+                            totalIngredients.forEachIndexed { idx, ing ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(1f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceAround,
+                                ) {
+                                    Text(
+                                        text = "$idx. ${ing.originalName}",
+                                        modifier = Modifier.fillMaxWidth(0.6f),
+                                        fontSize = 18.sp,
+                                        color = Color.DarkGray,
+                                        fontWeight = FontWeight.W400,
+                                        softWrap = true,
+                                        maxLines = 3,
+                                        textAlign = TextAlign.Start,
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(1f),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    ) {
+                                        Text(
+                                            text = ing.amount.toString(),
+                                            fontSize = 18.sp,
+                                            color = Color.DarkGray,
+                                            fontWeight = FontWeight.W400,
+                                            softWrap = true,
+                                            maxLines = 1,
+                                            textAlign = TextAlign.End,
+                                        )
+                                        Text(
+                                            text = ing.unit.toString(),
+                                            fontSize = 18.sp,
+                                            color = Color.DarkGray,
+                                            fontWeight = FontWeight.W400,
+                                            softWrap = true,
+                                            maxLines = 2,
+                                            textAlign = TextAlign.End,
+                                        )
+                                    }
+                                }
+                                if (idx != totalIngredients.size - 1) {
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                }
+                            }
                         }
                     }
                 }
@@ -475,10 +450,10 @@ fun Recipe(
                                     displayRowState.animateScrollBy(
                                         value = 600f,
                                         animationSpec =
-                                            tween(
-                                                6000,
-                                                easing = EaseInOut,
-                                            ),
+                                        tween(
+                                            6000,
+                                            easing = EaseInOut,
+                                        ),
                                     )
                                 }
                             }
@@ -507,10 +482,10 @@ fun Recipe(
                                     displayRowState.animateScrollBy(
                                         value = 600f,
                                         animationSpec =
-                                            tween(
-                                                6000,
-                                                easing = EaseInOut,
-                                            ),
+                                        tween(
+                                            6000,
+                                            easing = EaseInOut,
+                                        ),
                                     )
                                 }
                             }
@@ -533,8 +508,6 @@ fun Recipe(
                             }
                         }
                     }
-                }
-            }
 
                     Text(
                         "Recipe Finder",
@@ -558,24 +531,24 @@ fun Recipe(
                                 )
                             },
                             textStyle =
-                                TextStyle(
-                                    color = Color.DarkGray,
-                                    fontSize = 18.sp,
-                                    fontFamily =
-                                        FontFamily(
-                                            Font(R.font.defaultfont),
-                                        ),
+                            TextStyle(
+                                color = Color.DarkGray,
+                                fontSize = 18.sp,
+                                fontFamily =
+                                FontFamily(
+                                    Font(R.font.defaultfont),
                                 ),
+                            ),
                             modifier =
-                                Modifier
-                                    .fillMaxWidth(
-                                        0.8f,
-                                    ).height(50.dp),
+                            Modifier
+                                .fillMaxWidth(
+                                    0.8f,
+                                ).height(50.dp),
                             colors =
-                                OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF44B863),
-                                    focusedLabelColor = Color(0xFF615fd4),
-                                ),
+                            OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF44B863),
+                                focusedLabelColor = Color(0xFF615fd4),
+                            ),
                             shape = RoundedCornerShape(50),
                             value = searchVal,
                             onValueChange = { value: String ->
@@ -587,9 +560,9 @@ fun Recipe(
                                     "search your recipe",
                                     fontSize = 18.sp,
                                     fontFamily =
-                                        FontFamily(
-                                            Font(R.font.defaultfont),
-                                        ),
+                                    FontFamily(
+                                        Font(R.font.defaultfont),
+                                    ),
                                     color = Color.LightGray,
                                 )
                             },
@@ -602,9 +575,9 @@ fun Recipe(
                             },
                             contentPadding = PaddingValues(0.dp),
                             modifier =
-                                Modifier.fillMaxWidth().height(
-                                    40.dp,
-                                ),
+                            Modifier.fillMaxWidth().height(
+                                40.dp,
+                            ),
                             shape = RoundedCornerShape(15.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF022e2d)),
                         ) {
@@ -617,6 +590,21 @@ fun Recipe(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    if (!done) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            LaunchedEffect(loading) {
+                                if (loading != null) {
+                                    animatable.animate(
+                                        loading,
+                                        iterations = LottieConstants.IterateForever,
+                                    )
+                                }
+                            }
 
                             LottieAnimation(composition = loading, progress = animatable.progress, modifier = Modifier.size(150.dp))
                         }
