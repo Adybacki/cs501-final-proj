@@ -85,19 +85,20 @@ class AuthViewModel : ViewModel() {
      * Send a password reset email to [email].
      * Calls [onResult] with (success, errorMessage).
      */
-    fun resetPassword(email: String, onResult: (Boolean, String?) -> Unit) {
-        auth.sendPasswordResetEmail(email)
+    fun resetPassword(
+        email: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
+        auth
+            .sendPasswordResetEmail(email)
             .addOnSuccessListener {
                 Log.d("AuthVM", "✅ sendPasswordResetEmail: SUCCESS")
                 onResult(true, null)
-            }
-            .addOnFailureListener { e ->
+            }.addOnFailureListener { e ->
                 Log.e("AuthVM", "❌ sendPasswordResetEmail: FAILED — ${e.message}")
                 onResult(false, e.message)
             }
     }
-
-
 }
 
 sealed class AuthState {

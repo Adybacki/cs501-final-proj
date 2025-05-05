@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -161,18 +158,25 @@ fun LoginPage(
                     },
                     maxLines = 1,
                     colors =
-                    OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Sage,
-                    ),
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Sage,
+                        ),
                     visualTransformation = PasswordVisualTransformation(),
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Button(onClick = {
-                    hit = true
-                    authViewModel.login(email, password)
-                }, enabled = authState.value != AuthState.Loading && (password != "" && email != ""), colors = ButtonDefaults.buttonColors(containerColor = Sage)) {
+                Button(
+                    onClick = {
+                        hit = true
+                        authViewModel.login(email, password)
+                    },
+                    enabled = authState.value != AuthState.Loading && (password != "" && email != ""),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Sage,
+                        ),
+                ) {
                     Text("Login")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -200,7 +204,8 @@ fun LoginPage(
                     navController.navigate("signup")
                 }) {
                     Text("Don't have an account? Sign up here", color = Sage)
-                }}
+                }
+            }
 
         is AuthState.Error -> {
             Column(

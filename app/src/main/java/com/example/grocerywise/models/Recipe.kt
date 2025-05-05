@@ -1,12 +1,13 @@
 package com.example.grocerywise.models
 
-import java.util.Date
+data class RecipeSearched(
+    var id: Int = 0,
+    var title: String = "",
+    var image: String = "",
+)
 
-data class Ingredients(
-    val category: String?,
-    val name: String?,
-    val quality: Int?,
-    val unit: Int?,
-    val expiration: Date?,
-    val nutrition: Float?,
+data class SearchedResults(
+    var number: Int = 0,
+    var offset: Int = 0,
+    var totalResults: Int = 0,
 )

@@ -9,6 +9,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 data class ProductLookupRequest(
@@ -30,6 +31,26 @@ interface RecipeService {
         @Query("apiKey")apikey: String,
         @Query("number") number: Int,
     ): List<RecipeResponse>
+}
+
+interface SearchService {
+    @Headers("Content-Type: application/json")
+    @GET("recipes/complexSearch")
+    suspend fun getSearchRcp(
+        @Query("query") querySearch: String,
+        @Query("number") number: Int,
+        @Query("apiKey")apikey: String,
+        @Query("offset") offset: Int,
+    ): SearchResponse
+}
+
+interface RecipeInfoService {
+    @Headers("Content-Type: application/json")
+    @GET("recipes/{id}/information")
+    suspend fun getRcpInfo(
+        @Path("id") recipeId: Int,
+        @Query("apiKey")apikey: String,
+    ): RecipeInfoResponse
 }
 
 interface ApiService {
@@ -84,6 +105,8 @@ object ApiClient {
             .addConverterFactory(MoshiConverterFactory.create(moshi)) // Use Moshi for JSON parsing
             .build()
     val rcpService: RecipeService = rcpRetrofit.create(RecipeService::class.java)
+    val searchService: SearchService = rcpRetrofit.create(SearchService::class.java)
     val apiService: ApiService = retrofit.create(ApiService::class.java)
+    val rcpInfoService: RecipeInfoService = rcpRetrofit.create(RecipeInfoService::class.java)
     val ctgService: Categorization = ctgRetrofit.create(Categorization::class.java)
 }
