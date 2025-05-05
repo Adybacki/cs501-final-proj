@@ -2,6 +2,7 @@ package com.example.grocerywise.pages
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +18,7 @@ import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -47,11 +50,18 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.grocerywise.ProfileViewModel
+import androidx.navigation.NavController
+
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun GroceryListScreen(
     authViewModel: AuthViewModel,
+    navController: NavController,
+    onAvatarClick: () -> Unit
 ) {
 
     // Get the current user's UID.
@@ -97,7 +107,26 @@ fun GroceryListScreen(
             Text(text = "Grocery List", fontSize = 30.sp, fontWeight = FontWeight.W900, modifier = Modifier.weight(1f).fillMaxWidth(), fontFamily = FontFamily(
                 Font(resId = R.font.nunitobold),
             ),)
-            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
+//            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
+            // Get the shared ProfileViewModel to read avatarUrl
+            val profileViewModel: ProfileViewModel = viewModel()
+            val avatarUrl by profileViewModel.avatarUrl.collectAsState()
+
+// Show avatar instead of text
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = "Profile Avatar",
+                placeholder = painterResource(R.drawable.default_avatar),
+                error = painterResource(R.drawable.default_avatar),
+                fallback = painterResource(R.drawable.default_avatar),
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable {
+                        onAvatarClick()
+                    }
+            )
+
 
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -249,7 +278,8 @@ fun GroceryListScreen(
 fun GroceryListItem(
     item: GroceryItem,
     onEditClicked: () -> Unit,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+
 ) {
     val checkboxChecked by rememberUpdatedState(item.isChecked)
     Card(
