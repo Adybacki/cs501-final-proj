@@ -6,6 +6,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,19 +19,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -54,7 +58,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -71,6 +74,7 @@ import com.example.grocerywise.InventoryViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
 import com.example.grocerywise.models.InventoryItem
+import com.example.grocerywise.ui.theme.Cream
 import com.example.grocerywise.ui.theme.Sage
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
@@ -145,120 +149,113 @@ fun Recipe(
     val currentDisplay = touchedDisplay
     if (currentDisplay != null) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(1f).padding(16.dp).background(color = Color(0xFFD5BDAF)),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .background(Cream),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
             userScrollEnabled = true,
         ) {
-            val totalIngredients = currentDisplay.usedIngredients + currentDisplay.missedIngredients
+            // Close Button
             item {
-                Row(Modifier.fillMaxWidth().height(25.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.End) {
-                    Button(modifier = Modifier.width(20.dp).height(20.dp), onClick = { touchedDisplay = null }) {
+                Row(
+                    Modifier.fillMaxWidth().padding(end = 8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton (onClick = { touchedDisplay = null }) {
                         Icon(
-                            Icons.Default.Close, contentDescription = "Close"
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.DarkGray
                         )
                     }
                 }
             }
-            item{
-            Spacer(modifier= Modifier.height(20.dp))}
+
+            // Title
             item {
                 Text(
                     text = currentDisplay.title,
-                    fontSize = 30.sp,
+                    fontSize = 28.sp,
                     color = Color.DarkGray,
-                    fontWeight = FontWeight.W600,
-                    softWrap = true,
-                    maxLines = 2,
+                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    fontFamily = FontFamily(Font(R.font.nunitobold))
                 )
             }
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-            }
+
+            // Image
             item {
                 AsyncImage(
-                    modifier = Modifier.width(200.dp),
                     model = currentDisplay.image,
-                    contentScale = ContentScale.FillWidth,
-                    contentDescription = "Image",
+                    contentDescription = "Recipe Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .padding(vertical = 12.dp)
+                        .size(220.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .border(1.dp, Color.Gray, RoundedCornerShape(20.dp))
                 )
             }
-            item {
-                Spacer(modifier = Modifier.height(10.dp))
-            }
+
+            // "Ingredients" Label
             item {
                 Text(
-                    modifier = Modifier.fillMaxWidth(),
                     text = "Ingredients:",
-                    fontSize = 20.sp,
-                    color = Color.DarkGray,
-                    fontWeight = FontWeight.W400,
-                    softWrap = true,
-                    maxLines = 2,
-                    textAlign = TextAlign.Start,
-                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 22.sp,
+                    color = Color(0xFF444444),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp, horizontal = 4.dp)
                 )
             }
-            item {
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+
+            // Ingredient List
+            itemsIndexed(currentDisplay.usedIngredients + currentDisplay.missedIngredients) { idx, ing ->
+                Card (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
-                    totalIngredients.forEachIndexed { idx, ing ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(1f),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceAround,
+                    Row(
+                        modifier = Modifier
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "${idx + 1}. ${ing.originalName}",
+                                fontSize = 16.sp,
+                                color = Color.DarkGray,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.padding(start = 12.dp)
                         ) {
                             Text(
-                                text = "$idx. ${ing.originalName}",
-                                modifier = Modifier.fillMaxWidth(0.6f),
-                                fontSize = 18.sp,
+                                text = "${ing.amount} ${ing.unit}",
+                                fontSize = 16.sp,
                                 color = Color.DarkGray,
-                                fontWeight = FontWeight.W400,
-                                softWrap = true,
-                                maxLines = 3,
-                                textAlign = TextAlign.Start,
+                                fontWeight = FontWeight.Normal
                             )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(1f),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            ) {
-                                Text(
-                                    text = ing.amount.toString(),
-                                    fontSize = 18.sp,
-                                    color = Color.DarkGray,
-                                    fontWeight = FontWeight.W400,
-                                    softWrap = true,
-                                    maxLines = 1,
-                                    textAlign = TextAlign.End,
-                                )
-                                Text(
-                                    text = ing.unit.toString(),
-                                    fontSize = 18.sp,
-                                    color = Color.DarkGray,
-                                    fontWeight = FontWeight.W400,
-                                    softWrap = true,
-                                    maxLines = 2,
-                                    textAlign = TextAlign.End,
-                                )
-                            }
-                        }
-                        if (idx != totalIngredients.size - 1) {
-                            Spacer(modifier = Modifier.height(5.dp))
                         }
                     }
                 }
             }
         }
-    } else {
+    }
+    else {
         Column(
             modifier = Modifier.fillMaxSize(1f).padding(16.dp),
             verticalArrangement = Arrangement.Top,
