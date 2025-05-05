@@ -84,8 +84,6 @@ import java.nio.charset.StandardCharsets
 
 @Composable
 fun Recipe(
-    navController: NavController,
-    authViewModel: AuthViewModel,
 ) {
     val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
     var searchVal by remember { mutableStateOf("") }
@@ -193,11 +191,11 @@ fun Recipe(
             if (currentInfoDisplay != null) {
                 LazyColumn(
                     modifier =
-                        Modifier
-                            .fillMaxSize(
-                                1f,
-                            ).padding(start = 10.dp, end = 10.dp, top = 20.dp)
-                            .background(color = Color(0xFFD5BDAF)),
+                    Modifier
+                        .fillMaxSize(
+                            1f,
+                        ).padding(start = 10.dp, end = 10.dp, top = 20.dp)
+                        .background(color = Color(0xFFD5BDAF)),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = true,
@@ -316,11 +314,11 @@ fun Recipe(
             } else if (currentDisplay != null) {
                 LazyColumn(
                     modifier =
-                        Modifier
-                            .fillMaxSize(
-                                1f,
-                            ).padding(start = 10.dp, end = 10.dp, top = 20.dp)
-                            .background(color = Color(0xFFD5BDAF)),
+                    Modifier
+                        .fillMaxSize(
+                            1f,
+                        ).padding(start = 10.dp, end = 10.dp, top = 20.dp)
+                        .background(color = Color(0xFFD5BDAF)),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = true,
@@ -452,10 +450,10 @@ fun Recipe(
                                     displayRowState.animateScrollBy(
                                         value = 600f,
                                         animationSpec =
-                                            tween(
-                                                6000,
-                                                easing = EaseInOut,
-                                            ),
+                                        tween(
+                                            6000,
+                                            easing = EaseInOut,
+                                        ),
                                     )
                                 }
                             }
@@ -484,10 +482,10 @@ fun Recipe(
                                     displayRowState.animateScrollBy(
                                         value = 600f,
                                         animationSpec =
-                                            tween(
-                                                6000,
-                                                easing = EaseInOut,
-                                            ),
+                                        tween(
+                                            6000,
+                                            easing = EaseInOut,
+                                        ),
                                     )
                                 }
                             }
@@ -533,24 +531,24 @@ fun Recipe(
                                 )
                             },
                             textStyle =
-                                TextStyle(
-                                    color = Color.DarkGray,
-                                    fontSize = 18.sp,
-                                    fontFamily =
-                                        FontFamily(
-                                            Font(R.font.defaultfont),
-                                        ),
+                            TextStyle(
+                                color = Color.DarkGray,
+                                fontSize = 18.sp,
+                                fontFamily =
+                                FontFamily(
+                                    Font(R.font.defaultfont),
                                 ),
+                            ),
                             modifier =
-                                Modifier
-                                    .fillMaxWidth(
-                                        0.8f,
-                                    ).height(50.dp),
+                            Modifier
+                                .fillMaxWidth(
+                                    0.8f,
+                                ).height(50.dp),
                             colors =
-                                OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF44B863),
-                                    focusedLabelColor = Color(0xFF615fd4),
-                                ),
+                            OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF44B863),
+                                focusedLabelColor = Color(0xFF615fd4),
+                            ),
                             shape = RoundedCornerShape(50),
                             value = searchVal,
                             onValueChange = { value: String ->
@@ -562,9 +560,9 @@ fun Recipe(
                                     "search your recipe",
                                     fontSize = 18.sp,
                                     fontFamily =
-                                        FontFamily(
-                                            Font(R.font.defaultfont),
-                                        ),
+                                    FontFamily(
+                                        Font(R.font.defaultfont),
+                                    ),
                                     color = Color.LightGray,
                                 )
                             },
@@ -577,9 +575,9 @@ fun Recipe(
                             },
                             contentPadding = PaddingValues(0.dp),
                             modifier =
-                                Modifier.fillMaxWidth().height(
-                                    40.dp,
-                                ),
+                            Modifier.fillMaxWidth().height(
+                                40.dp,
+                            ),
                             shape = RoundedCornerShape(15.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF022e2d)),
                         ) {

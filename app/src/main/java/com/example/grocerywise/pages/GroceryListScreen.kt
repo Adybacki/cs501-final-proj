@@ -1,5 +1,6 @@
 package com.example.grocerywise.pages
 
+import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,12 +25,11 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -39,7 +39,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.grocerywise.AuthViewModel
 import com.example.grocerywise.R
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
@@ -51,16 +50,12 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.example.grocerywise.ProfileViewModel
-import androidx.navigation.NavController
 
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun GroceryListScreen(
-    authViewModel: AuthViewModel,
-    navController: NavController,
     onAvatarClick: () -> Unit
 ) {
 
@@ -71,6 +66,11 @@ fun GroceryListScreen(
     // List to store inventory items from Firebase.
     val groceryItems = remember { mutableStateListOf<GroceryItem>() }
     val showEditDialog = remember { mutableStateOf<GroceryItem?>(null) }
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val screenWidthDp = configuration.screenWidthDp
+    val isTabletWidth = screenWidthDp >= 600
 
     // Listen for changes in the inventory data from the database.
     LaunchedEffect(userId) {
@@ -107,25 +107,26 @@ fun GroceryListScreen(
             Text(text = "Grocery List", fontSize = 30.sp, fontWeight = FontWeight.W900, modifier = Modifier.weight(1f).fillMaxWidth(), fontFamily = FontFamily(
                 Font(resId = R.font.nunitobold),
             ),)
-//            TextButton(onClick = { authViewModel.signout() }) { Text("Sign out", color = Color.Black) }
             // Get the shared ProfileViewModel to read avatarUrl
             val profileViewModel: ProfileViewModel = viewModel()
             val avatarUrl by profileViewModel.avatarUrl.collectAsState()
 
 // Show avatar instead of text
-            AsyncImage(
-                model = avatarUrl,
-                contentDescription = "Profile Avatar",
-                placeholder = painterResource(R.drawable.default_avatar),
-                error = painterResource(R.drawable.default_avatar),
-                fallback = painterResource(R.drawable.default_avatar),
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        onAvatarClick()
-                    }
-            )
+            if (!isTabletWidth || isLandscape) {
+                AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = "Profile Avatar",
+                    placeholder = painterResource(R.drawable.default_avatar),
+                    error = painterResource(R.drawable.default_avatar),
+                    fallback = painterResource(R.drawable.default_avatar),
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable {
+                            onAvatarClick()
+                        }
+                )
+            }
 
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -340,6 +341,10 @@ fun EditGroceryItemDialog(
         text = {
             Column {
                 OutlinedTextField(
+                    colors =
+                    OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Sage,
+                    ),
                     value = quantity.value,
                     onValueChange = { newValue ->
                         // Allow only digits and values up to 99.
@@ -351,6 +356,10 @@ fun EditGroceryItemDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
                 OutlinedTextField(
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Sage,
+                            ),
                     value = price.value,
                     onValueChange = { newValue ->
                         // Allow only valid price formats (up to 7 digits and 2 decimal places).
@@ -359,7 +368,7 @@ fun EditGroceryItemDialog(
                             price.value = newValue
                         }
                     },
-                    label = { Text("Estimated Price") }
+                    label = { Text("Estimated Price")}
                 )
             }
         },
@@ -370,7 +379,7 @@ fun EditGroceryItemDialog(
                     estimatedPrice = price.value.toDoubleOrNull() ?: item.estimatedPrice
                 )
                 onConfirm(updated)
-            }) {
+            }, colors = ButtonDefaults.buttonColors(containerColor = Sage)) {
                 Text("Save")
             }
         },
@@ -378,6 +387,6 @@ fun EditGroceryItemDialog(
             OutlinedButton(onClick = onDismiss) {
                 Text("Cancel")
             }
-        }
+        }, containerColor = Cream
     )
 }

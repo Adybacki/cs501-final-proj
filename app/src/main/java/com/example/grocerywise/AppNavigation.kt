@@ -2,6 +2,7 @@ package com.example.grocerywise
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,7 +17,7 @@ import com.example.grocerywise.pages.SignupPage
 import com.google.firebase.Firebase
 import com.google.firebase.database.database
 import com.example.grocerywise.pages.ProfilePage
-
+import com.example.grocerywise.pages.PantryAndShoppingListScreen
 
 @Composable
 fun AppNavigation(
@@ -45,11 +46,19 @@ fun AppNavigation(
             HomePage(modifier, navController, authViewModel)
         }
         composable("recipe") {
-            Recipe(navController, authViewModel)
+            Recipe()
         }
         composable("profile") {
             ProfilePage(navController = navController, authViewModel = authViewModel)
         }
+        composable("pantry_shopping_combined") {
+            PantryAndShoppingListScreen(
+                authViewModel = authViewModel,
+                bottomNavController = navController,
+                onAvatarClick       = { navController.navigate("profile") }
+            )
+        }
+
 
         composable(
             route = "add_item?productName={productName}&productUpc={productUpc}&productPrice={productPrice}&productImageUri={productImageUri}",
