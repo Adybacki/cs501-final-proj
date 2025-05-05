@@ -45,7 +45,7 @@ fun AppNavigation(
             HomePage(modifier, navController, authViewModel)
         }
         composable("recipe") {
-            Recipe(navController, authViewModel)
+            Recipe()
         }
         composable("profile") {
             ProfilePage(navController = navController, authViewModel = authViewModel)

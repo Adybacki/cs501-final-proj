@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
+import com.example.grocerywise.ui.theme.Cream
 
 @Composable
 fun RecipeCard(
@@ -41,7 +42,7 @@ fun RecipeCard(
 ) {
     ElevatedCard(
         modifier = Modifier.heightIn(min = 180.dp).widthIn(min = 180.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE9EDCA)),
+        colors = CardDefaults.cardColors(containerColor = Cream),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         shape = RoundedCornerShape(corner = CornerSize(10.dp)),
         onClick = callback,
@@ -67,6 +68,7 @@ fun RecipeCard(
                 maxLines = 2,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
+                fontFamily = FontFamily(Font(R.font.nunitobold))
             )
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -75,7 +77,6 @@ fun RecipeCard(
                     text = "Ingredients: ",
                     color = Color.DarkGray,
                     fontWeight = FontWeight.W400,
-                    fontFamily = FontFamily(Font(R.font.defaultfont)),
                     fontSize = 20.sp,
                 )
                 Info.usedIngredients.forEachIndexed { idx, ing ->
@@ -90,7 +91,6 @@ fun RecipeCard(
                             color = Color(0xFF3A5A40),
                             fontWeight = FontWeight.W400,
                             fontSize = 18.sp,
-                            fontFamily = FontFamily(Font(R.font.defaultfont)),
                         )
                         Row {
                             Text(
@@ -107,7 +107,6 @@ fun RecipeCard(
                                 color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.W400,
-                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
@@ -117,7 +116,6 @@ fun RecipeCard(
                                 color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.W400,
-                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                         }
                     }
@@ -136,7 +134,6 @@ fun RecipeCard(
                             fontWeight = FontWeight.W400,
                             softWrap = true,
                             maxLines = 2,
-                            fontFamily = FontFamily(Font(R.font.defaultfont)),
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text(
@@ -153,7 +150,6 @@ fun RecipeCard(
                                 },
                                 color = Color(0xFFD4A373),
                                 fontSize = 16.sp,
-                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                             if (ing.unit != null) {
                                 Text(
@@ -163,7 +159,6 @@ fun RecipeCard(
                                     text = ing.unit,
                                     color = Color(0xFFD4A373),
                                     fontSize = 16.sp,
-                                    fontFamily = FontFamily(Font(R.font.defaultfont)),
                                 )
                             }
                         }

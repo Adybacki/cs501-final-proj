@@ -204,8 +204,6 @@ fun HomePage(
             // Recipes (always full-screen)
             composable("recipe") {
                 Recipe(
-                    navController = bottomNavController,
-                    authViewModel = authViewModel
                 )
             }
 
