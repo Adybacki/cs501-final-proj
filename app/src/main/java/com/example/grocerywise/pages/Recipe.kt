@@ -109,6 +109,15 @@ fun Recipe(
         Log.i ("prev1", prev.joinToString ())
 
         if (userId != null) {
+
+            if (search){
+
+
+
+                return@LaunchedEffect
+            }
+
+
             if (prev == inventoryItem && prev != emptyList<InventoryItem>()) {
                 if (recipeResponse != recipeList) {
                     recipeList.clear()
@@ -117,8 +126,7 @@ fun Recipe(
                 done = true
                 return@LaunchedEffect
             }
-            Log.i("prev", prev.joinToString())
-            Log.i("inventroyItem", inventoryItem.joinToString())
+
             inventoryViewModel.Memo(inventoryItem)
 
             inventoryItem.listIterator().forEach { item ->
@@ -127,7 +135,7 @@ fun Recipe(
 // get the classification based
                 val requestBody = ClassifyRequestBody(title = itemName)
                 val catgoryname = ApiClient.ctgService.getIg(requestBody = requestBody, apikey = apiKey)
-                Log.i("category", itemName)
+//                Log.i("category", itemName)
                 val ctgryName = catgoryname.category
                 if (catgoryname.category != "unknown") {
                     categorization.add(ctgryName)
@@ -136,14 +144,15 @@ fun Recipe(
 
             // get the recipe
             val fetchString = categorization.joinToString(separator = ",+")
-            Log.i("fetched String", fetchString)
+
             val rcpResponse = ApiClient.rcpService.getRecipe(apikey = apiKey, ingredients = fetchString, number = 10)
-            Log.i("rcpResponseList:", rcpResponse.toString())
+
             recipeList.clear()
             recipeList.addAll(rcpResponse)
             inventoryViewModel.MemoRecipeLlist(rcpResponse)
             done = true
         } else {
+            inventoryViewModel.Memo(emptyList())
             recipeList.clear()
         }
     }
