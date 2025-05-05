@@ -33,7 +33,6 @@ import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -50,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -62,7 +60,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
@@ -123,7 +120,7 @@ fun hexToColor(hex: String): Color {
 fun InventoryScreen(
     authViewModel: AuthViewModel,
     navController: NavController,
-    onAvatarClick: () -> Unit
+    onAvatarClick: () -> Unit,
 ) {
     // Get the current user's UID.
     val currentUser = FirebaseAuth.getInstance().currentUser
@@ -227,12 +224,13 @@ fun InventoryScreen(
                 placeholder = painterResource(R.drawable.default_avatar),
                 error = painterResource(R.drawable.default_avatar),
                 fallback = painterResource(R.drawable.default_avatar),
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        onAvatarClick()
-                    }
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable {
+                            onAvatarClick()
+                        },
             )
         }
         Spacer(modifier = Modifier.height(20.dp))
@@ -259,7 +257,7 @@ fun InventoryScreen(
                                 .fillMaxHeight()
                                 .fillMaxWidth(per)
                                 .background(color = color),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = name,
@@ -275,17 +273,18 @@ fun InventoryScreen(
 
         if (inventoryItems.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Your inventory is empty!\nAdd items using the + button on the bottom right.",
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Medium,
-                    fontFamily = FontFamily(Font(resId = R.font.nunitobold))
+                    fontFamily = FontFamily(Font(resId = R.font.nunitobold)),
                 )
             }
         } else {
@@ -347,11 +346,12 @@ fun InventoryScreen(
                         dismissContent = {
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = Cream),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp, vertical = 4.dp),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
                             ) {
                                 Row(
                                     Modifier
@@ -364,16 +364,17 @@ fun InventoryScreen(
                                         AsyncImage(
                                             model = url,
                                             contentDescription = null,
-                                            modifier = Modifier
-                                                .size(40.dp)
-                                                .clip(CircleShape),
+                                            modifier =
+                                                Modifier
+                                                    .size(40.dp)
+                                                    .clip(CircleShape),
                                         )
                                         Spacer(Modifier.width(8.dp))
                                     }
                                     Text(
                                         item.name,
                                         modifier = Modifier.weight(1f),
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
                                     )
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         IconButton(onClick = {
@@ -382,7 +383,7 @@ fun InventoryScreen(
                                             userId?.let {
                                                 FirebaseDatabaseManager.updateInventoryItem(
                                                     it,
-                                                    updated
+                                                    updated,
                                                 )
                                             }
                                         }) {
@@ -392,7 +393,7 @@ fun InventoryScreen(
                                         Text(
                                             "${item.quantity}",
                                             fontSize = 20.sp,
-                                            modifier = Modifier.padding(8.dp)
+                                            modifier = Modifier.padding(8.dp),
                                         )
 
                                         IconButton(onClick = {
@@ -403,7 +404,7 @@ fun InventoryScreen(
                                                 userId?.let { uid ->
                                                     FirebaseDatabaseManager.updateInventoryItem(
                                                         uid,
-                                                        updated
+                                                        updated,
                                                     )
                                                 }
                                             } else {
@@ -412,7 +413,7 @@ fun InventoryScreen(
                                         }) {
                                             Icon(
                                                 Icons.Default.Delete,
-                                                contentDescription = "Decrease"
+                                                contentDescription = "Decrease",
                                             )
                                         }
                                     }
@@ -446,19 +447,27 @@ fun InventoryScreen(
                         FirebaseDatabaseManager.removeInventoryItem(userId!!, itemToDelete.id!!) { success, _ ->
                             if (!success) Log.e("InventoryScreen", "delete failed")
                         }
-                        val groceryItemToAdd = GroceryItem(id = itemToDelete.id, name = itemToDelete.name, quantity = 1, upc = itemToDelete.upc, imageUrl = itemToDelete.imageUrl )
+                        val groceryItemToAdd =
+                            GroceryItem(
+                                id = itemToDelete.id,
+                                name = itemToDelete.name,
+                                quantity = 1,
+                                upc = itemToDelete.upc,
+                                imageUrl = itemToDelete.imageUrl,
+                            )
                         if (itemToDelete.upc != null) {
                             FirebaseDatabaseManager.addGroceryListItem(userId, groceryItemToAdd)
                             navController.navigate("grocery_list")
                         } else {
-                        // 3) navigate to your AddItemScreen, passing fields as parameters
-                        navController.navigate(
-                            "add_item?" +
-                                "productName=${Uri.encode(itemToDelete.name)}" +
-                                "&productUpc=" +
-                                "&productPrice=" + // leave blank or supply default
-                                "&productImageUri=", // leave blank or supply default
-                        )}
+                            // 3) navigate to your AddItemScreen, passing fields as parameters
+                            navController.navigate(
+                                "add_item?" +
+                                    "productName=${Uri.encode(itemToDelete.name)}" +
+                                    "&productUpc=" +
+                                    "&productPrice=" + // leave blank or supply default
+                                    "&productImageUri=", // leave blank or supply default
+                            )
+                        }
 
                         pendingDelete = null
                     }) {
