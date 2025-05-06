@@ -555,10 +555,6 @@ fun Recipe() {
                         TextStyle(
                             color = Color.DarkGray,
                             fontSize = 18.sp,
-                            fontFamily =
-                                FontFamily(
-                                    Font(R.font.defaultfont),
-                                ),
                         ),
                     modifier =
                         Modifier

@@ -34,6 +34,7 @@ import coil.compose.AsyncImage
 import com.example.grocerywise.R
 import com.example.grocerywise.RecipeResponse
 import com.example.grocerywise.ui.theme.Cream
+import com.example.grocerywise.ui.theme.Sage
 
 @Composable
 fun RecipeCard(
@@ -79,6 +80,7 @@ fun RecipeCard(
                     fontWeight = FontWeight.W400,
                     fontSize = 20.sp,
                 )
+                // Display ingredients already in inventory as green
                 Info.usedIngredients.forEachIndexed { idx, ing ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -88,7 +90,7 @@ fun RecipeCard(
                         Text(
                             maxLines = 2,
                             text = ing.name,
-                            color = Color(0xFF3A5A40),
+                            color = Sage,
                             fontWeight = FontWeight.W400,
                             fontSize = 18.sp,
                         )

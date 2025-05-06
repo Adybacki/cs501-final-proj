@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.grocerywise.R
 import com.example.grocerywise.RecipeInfoResponse
+import com.example.grocerywise.ui.theme.Cream
+import com.example.grocerywise.ui.theme.Sage
 
 @Composable
 fun RecipeInfoCard(
@@ -41,7 +43,7 @@ fun RecipeInfoCard(
 ) {
     ElevatedCard(
         modifier = Modifier.heightIn(min = 180.dp).widthIn(min = 180.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE9EDCA)),
+        colors = CardDefaults.cardColors(containerColor = Cream),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         shape = RoundedCornerShape(corner = CornerSize(10.dp)),
         onClick = callback,
@@ -67,6 +69,7 @@ fun RecipeInfoCard(
                 maxLines = 2,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
+                fontFamily = FontFamily(Font(R.font.nunitobold))
             )
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -75,7 +78,6 @@ fun RecipeInfoCard(
                     text = "Ingredients: ",
                     color = Color.DarkGray,
                     fontWeight = FontWeight.W400,
-                    fontFamily = FontFamily(Font(R.font.defaultfont)),
                     fontSize = 20.sp,
                 )
                 val length = info.extendedIngredient.size
@@ -88,10 +90,9 @@ fun RecipeInfoCard(
                         Text(
                             maxLines = 2,
                             text = ing.name,
-                            color = Color(0xFF3A5A40),
+                            color = Sage,
                             fontWeight = FontWeight.W400,
                             fontSize = 18.sp,
-                            fontFamily = FontFamily(Font(R.font.defaultfont)),
                         )
                         Row {
                             Text(
@@ -108,7 +109,6 @@ fun RecipeInfoCard(
                                 color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.W400,
-                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
@@ -118,7 +118,6 @@ fun RecipeInfoCard(
                                 color = Color(0xFF3A5A40),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.W400,
-                                fontFamily = FontFamily(Font(R.font.defaultfont)),
                             )
                         }
                     }
