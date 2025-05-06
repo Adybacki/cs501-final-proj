@@ -10,7 +10,7 @@ object FirebaseDatabaseManager {
     private val database = FirebaseDatabase.getInstance()
 
     // Get a reference to the current user's inventory node.
-    private fun getUserInventoryRef(userId: String) = database.getReference("users").child(userId).child("inventory")
+    fun getUserInventoryRef(userId: String) = database.getReference("users").child(userId).child("inventory")
 
     private fun getUserIngredientsRef(userId: String) = database.getReference("users").child(userId).child("ingredients")
 
@@ -65,7 +65,7 @@ object FirebaseDatabaseManager {
         getUserIngredientsRef(userId).addValueEventListener(listener)
     }
 
-    private fun getUserGroceryListRef(userId: String) = database.getReference("users").child(userId).child("groceryList")
+    fun getUserGroceryListRef(userId: String) = database.getReference("users").child(userId).child("groceryList")
 
     // Add a grocery list item; uses push() to generate a unique key.
     fun addGroceryListItem(
