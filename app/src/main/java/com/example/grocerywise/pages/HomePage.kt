@@ -91,6 +91,10 @@ fun HomePage(
     LaunchedEffect(useCombinedLayout, isTabletPortrait) {
         val currentRoute = bottomNavController.currentDestination?.route
 
+        if (currentRoute == "recipe") {
+            return@LaunchedEffect  // Do nothing if on recipe screen
+        }
+
         if (useCombinedLayout && currentRoute != "pantry_shopping_combined") {
             bottomNavController.navigate("pantry_shopping_combined") {
                 popUpTo(bottomNavController.graph.startDestinationId) { inclusive = true }

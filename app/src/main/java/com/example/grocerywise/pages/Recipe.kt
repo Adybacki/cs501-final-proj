@@ -1,5 +1,6 @@
 package com.example.grocerywise.pages
 
+import android.content.res.Configuration
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -56,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -113,6 +115,12 @@ fun Recipe(
     val displayRowState = rememberLazyListState()
     var touchedDisplay by remember { mutableStateOf<RecipeResponse?>(null) }
     var touchedInfoDisplay by remember { mutableStateOf<RecipeInfoResponse?>(null) }
+
+    // Adaptability variables
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val screenWidthDp = configuration.screenWidthDp
+    val isTabletWidth = screenWidthDp >= 600
 
     LaunchedEffect(userId, inventoryItem, search) {
         val prev = inventoryViewModel.pre
@@ -193,8 +201,6 @@ fun Recipe(
         }
     }
 
-    when (info) {
-        WindowWidthSizeClass.COMPACT -> {
             val currentDisplay = touchedDisplay
             val currentInfoDisplay = touchedInfoDisplay
 
@@ -441,19 +447,25 @@ fun Recipe(
                 ) {
                     if (done) {
                         if (SearchedList.isNotEmpty()) {
-                            LaunchedEffect(displayRowState, SearchedList) {
-                                snapshotFlow { displayRowState.layoutInfo.totalItemsCount }.first { it > 0 }
-                                val midway = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % SearchedList.size)
-                                displayRowState.scrollToItem(midway, scrollOffset = 0)
-                                while (isActive) {
-                                    displayRowState.animateScrollBy(
-                                        value = 600f,
-                                        animationSpec =
-                                        tween(
-                                            6000,
-                                            easing = EaseInOut,
-                                        ),
-                                    )
+
+                            // Don't show scrolling header when phone and landscape for more space
+                            if (isTabletWidth || !isLandscape) {
+                                // Scrolling header
+                                LaunchedEffect(displayRowState, SearchedList) {
+                                    snapshotFlow { displayRowState.layoutInfo.totalItemsCount }.first { it > 0 }
+                                    val midway =
+                                        (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % SearchedList.size)
+                                    displayRowState.scrollToItem(midway, scrollOffset = 0)
+                                    while (isActive) {
+                                        displayRowState.animateScrollBy(
+                                            value = 600f,
+                                            animationSpec =
+                                            tween(
+                                                6000,
+                                                easing = EaseInOut,
+                                            ),
+                                        )
+                                    }
                                 }
                             }
                             LazyRow(
@@ -473,19 +485,22 @@ fun Recipe(
                                 }
                             }
                         } else if (!recipeList.isEmpty()) {
-                            LaunchedEffect(displayRowState, recipeList) {
-                                snapshotFlow { displayRowState.layoutInfo.totalItemsCount }.first { it > 0 }
-                                val midway = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % recipeList.size)
-                                displayRowState.scrollToItem(midway, scrollOffset = 0)
-                                while (isActive) {
-                                    displayRowState.animateScrollBy(
-                                        value = 600f,
-                                        animationSpec =
-                                        tween(
-                                            6000,
-                                            easing = EaseInOut,
-                                        ),
-                                    )
+                            if (isTabletWidth || !isLandscape) {
+                                LaunchedEffect(displayRowState, recipeList) {
+                                    snapshotFlow { displayRowState.layoutInfo.totalItemsCount }.first { it > 0 }
+                                    val midway =
+                                        (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % recipeList.size)
+                                    displayRowState.scrollToItem(midway, scrollOffset = 0)
+                                    while (isActive) {
+                                        displayRowState.animateScrollBy(
+                                            value = 600f,
+                                            animationSpec =
+                                            tween(
+                                                6000,
+                                                easing = EaseInOut,
+                                            ),
+                                        )
+                                    }
                                 }
                             }
 
@@ -513,7 +528,7 @@ fun Recipe(
                         fontWeight = FontWeight.W600,
                         fontFamily = FontFamily(Font(R.font.nunitobold)),
                         fontSize = 30.sp,
-                        color = Color(0xFF101210),
+                        modifier = Modifier.padding(10.dp)
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Row(
@@ -631,6 +646,4 @@ fun Recipe(
                     }
                 }
             }
-        }
     }
-}
