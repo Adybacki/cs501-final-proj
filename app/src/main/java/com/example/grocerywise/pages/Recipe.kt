@@ -207,128 +207,106 @@ fun Recipe() {
 
     if (currentInfoDisplay != null) {
         LazyColumn(
-            modifier =
-                Modifier
-                    .fillMaxSize(
-                        1f,
-                    ).padding(16.dp)
-                    .background(color = Color(0xFFD5BDAF)),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .background(Cream),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
             userScrollEnabled = true,
         ) {
+            // Close Button
             item {
                 Row(
-                    Modifier.fillMaxWidth().height(25.dp).padding(horizontal = 20.dp),
+                    Modifier.fillMaxWidth().padding(end = 8.dp),
                     horizontalArrangement = Arrangement.End,
                 ) {
-                    Button(
-                        modifier = Modifier.width(20.dp).height(20.dp),
-                        onClick = { touchedInfoDisplay = null },
-                    ) {
+                    IconButton(onClick = { touchedInfoDisplay = null }) {
                         Icon(
                             painter = painterResource(R.drawable.close),
-                            contentDescription = "close",
-                            modifier = Modifier.size(25.dp),
+                            contentDescription = "Close",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.DarkGray,
                         )
                     }
                 }
             }
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-            }
+
+            // Title
             item {
                 Text(
                     text = currentInfoDisplay.title,
-                    fontSize = 30.sp,
+                    fontSize = 28.sp,
                     color = Color.DarkGray,
-                    fontWeight = FontWeight.W600,
-                    softWrap = true,
-                    maxLines = 2,
+                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    fontFamily = FontFamily(Font(R.font.nunitobold)),
                 )
             }
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-            }
+
+            // Image
             item {
                 AsyncImage(
-                    modifier = Modifier.width(200.dp),
                     model = currentInfoDisplay.image,
-                    contentScale = ContentScale.FillWidth,
                     contentDescription = "Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .padding(vertical = 12.dp)
+                        .size(220.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .border(1.dp, Color.Gray, RoundedCornerShape(20.dp)),
                 )
             }
-            item {
-                Spacer(modifier = Modifier.height(10.dp))
-            }
+
+            // Ingredients Label
             item {
                 Text(
-                    modifier = Modifier.fillMaxWidth(),
                     text = "Ingredients:",
-                    fontSize = 20.sp,
-                    color = Color.DarkGray,
-                    fontWeight = FontWeight.W400,
-                    softWrap = true,
-                    maxLines = 2,
-                    textAlign = TextAlign.Start,
-                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 22.sp,
+                    color = Color(0xFF444444),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp, horizontal = 4.dp),
                 )
             }
-            item {
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+
+            // Ingredient List
+            itemsIndexed(currentInfoDisplay.extendedIngredient) { idx, ing ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
                 ) {
-                    val length = currentInfoDisplay.extendedIngredient.size
-                    currentInfoDisplay.extendedIngredient.forEachIndexed { idx, ing ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(1f),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceAround,
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "${idx + 1}. ${ing.originalName}",
+                                fontSize = 16.sp,
+                                color = Color.DarkGray,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.padding(start = 12.dp),
                         ) {
                             Text(
-                                text = "$idx. ${ing.originalName}",
-                                modifier = Modifier.fillMaxWidth(0.6f),
-                                fontSize = 18.sp,
+                                text = "${ing.amount} ${ing.unit}",
+                                fontSize = 16.sp,
                                 color = Color.DarkGray,
-                                fontWeight = FontWeight.W400,
-                                softWrap = true,
-                                maxLines = 3,
-                                textAlign = TextAlign.Start,
+                                fontWeight = FontWeight.Normal,
                             )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(1f),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            ) {
-                                Text(
-                                    text = ing.amount.toString(),
-                                    fontSize = 18.sp,
-                                    color = Color.DarkGray,
-                                    fontWeight = FontWeight.W400,
-                                    softWrap = true,
-                                    maxLines = 1,
-                                    textAlign = TextAlign.End,
-                                )
-                                Text(
-                                    text = ing.unit.toString(),
-                                    fontSize = 18.sp,
-                                    color = Color.DarkGray,
-                                    fontWeight = FontWeight.W400,
-                                    softWrap = true,
-                                    maxLines = 2,
-                                    textAlign = TextAlign.End,
-                                )
-                            }
-                        }
-                        if (idx != length - 1) {
-                            Spacer(modifier = Modifier.height(5.dp))
                         }
                     }
                 }
