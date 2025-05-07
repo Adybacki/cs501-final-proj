@@ -46,6 +46,12 @@ object FirebaseDatabaseManager {
             .child(itemId)
             .removeValue()
             .addOnCompleteListener { task ->
+                if (task.isSuccessful){
+                    FirebaseStorageManager.deleteItemImage(
+                        userId,
+                        "inventory",
+                        itemId)
+                }
                 onComplete?.invoke(task.isSuccessful, task.exception)
             }
     }
@@ -98,6 +104,13 @@ object FirebaseDatabaseManager {
             .child(itemId)
             .removeValue()
             .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    FirebaseStorageManager.deleteItemImage(
+                        userId,
+                        "groceryList",
+                        itemId
+                    )
+                }
                 onComplete?.invoke(task.isSuccessful, task.exception)
             }
     }

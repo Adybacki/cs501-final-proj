@@ -36,4 +36,29 @@ object FirebaseStorageManager {
                 onComplete(null)
             }
     }
+
+    /**
+     * Delete an item’s image from Cloud Storage.
+     *
+     * @param userId    current user’s UID
+     * @param itemType  either "inventory" or "groceryList"
+     * @param itemId    the Realtime-DB key of the item
+     * @param onComplete callback(success: Boolean)
+     */
+    fun deleteItemImage(
+        userId: String,
+        itemType: String,
+        itemId: String,
+        onComplete: (Boolean) -> Unit = {}
+    ) {
+        val imageRef = storageRef.child("users/$userId/$itemType/$itemId.jpg")
+        imageRef.delete()
+            .addOnSuccessListener { onComplete(true) }
+            .addOnFailureListener { onComplete(false) }
+    }
 }
+
+
+
+
+
