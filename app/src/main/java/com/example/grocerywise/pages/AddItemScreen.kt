@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,7 +51,15 @@ import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.GroceryItem
 import com.example.grocerywise.models.InventoryItem
 import com.example.grocerywise.ui.theme.Sage
+import com.example.grocerywise.data.FirebaseStorageManager
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+
 
 @Composable
 fun AddItemScreen(
@@ -82,6 +91,9 @@ fun AddItemScreen(
     val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid
+
+    // For downloading API images off the network
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier =
@@ -193,82 +205,158 @@ fun AddItemScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            Button(colors= ButtonDefaults.buttonColors(containerColor = Sage),
+            Button(
                 onClick = {
                     if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
-                        // Create an InventoryItem object.
-                        val newItem =
-                            InventoryItem(
-                                name = itemName.value,
-                                quantity = quantity.value.toIntOrNull() ?: 0,
-                                upc = upcCode.value,
-                                imageUrl = selectedImageUri.value?.toString(),
-                                // Note: Price and expirationDate are not stored for inventory items.
-                            )
-                        FirebaseDatabaseManager.addInventoryItem(userId, newItem) { success, exception ->
-                            if (success && !isLandscape && !isTabletWidth) {
-                                navController.navigate("inventory")
-                            } else if (success && isLandscape) {
-                                navController.navigate("pantry_shopping_combined")
-                            } else if (success) {
-                                navController.navigate("tablet_portrait")
-                            } else {
-                                Toast
-                                    .makeText(
-                                        context,
-                                        "Failed to add item: ${exception?.message}",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
+                        // 1) Reserve a new DB key for the inventory item
+                        val inventoryRef = FirebaseDatabaseManager
+                            .getUserInventoryRef(userId)
+                            .push()
+                        val itemId = inventoryRef.key ?: return@Button
+
+                        // 2) Create the item without imageUrl
+                        val newItem = InventoryItem(
+                            id = itemId,
+                            name = itemName.value,
+                            quantity = quantity.value.toIntOrNull() ?: 0,
+                            upc = upcCode.value,
+                            expirationDate = null,
+                            imageUrl = null
+                        )
+
+                        // 3) Write the item to Realtime Database
+                        inventoryRef.setValue(newItem)
+                            .addOnCompleteListener { task ->
+                                if (!task.isSuccessful) {
+                                    Toast
+                                        .makeText(context, "Failed to add item: ${task.exception?.message}", Toast.LENGTH_SHORT)
+                                        .show()
+                                    return@addOnCompleteListener
+                                }
+
+                                // 4) Upload image (local URI or API URL)
+                                selectedImageUri.value?.let { uri ->
+                                    if (uri.scheme?.startsWith("http") == true) {
+                                        // Download from API then upload to Storage
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            try {
+                                                val conn = URL(uri.toString()).openConnection() as HttpURLConnection
+                                                conn.inputStream.use { input ->
+                                                    val tmp = File(context.cacheDir, "$itemId-api.jpg")
+                                                    FileOutputStream(tmp).use { out -> input.copyTo(out) }
+                                                    val fileUri = Uri.fromFile(tmp)
+                                                    FirebaseStorageManager.uploadItemImage(userId, "inventory", itemId, fileUri) { dl ->
+                                                        dl?.let { url ->
+                                                            FirebaseDatabaseManager.updateInventoryItem(userId, newItem.copy(imageUrl = url))
+                                                        }
+                                                    }
+                                                }
+                                            } catch (e: Exception) {
+                                                // Fallback: save original API URL
+                                                FirebaseDatabaseManager.updateInventoryItem(userId, newItem.copy(imageUrl = uri.toString()))
+                                            }
+                                        }
+                                    } else {
+                                        // Local URI → upload directly
+                                        FirebaseStorageManager.uploadItemImage(userId, "inventory", itemId, uri) { dl ->
+                                            dl?.let { url ->
+                                                FirebaseDatabaseManager.updateInventoryItem(userId, newItem.copy(imageUrl = url))
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 6) Navigate based on layout
+                                when {
+                                    !isLandscape && !isTabletWidth -> navController.navigate("inventory")
+                                    isLandscape -> navController.navigate("pantry_shopping_combined")
+                                    else -> navController.navigate("tablet_portrait")
+                                }
                             }
-                        }
-                        // parse the data and added to the FireDatabase
                     } else {
                         Toast
-                            .makeText(
-                                context,
-                                "Please fill out all required fields",
-                                Toast.LENGTH_SHORT,
-                            ).show()
+                            .makeText(context, "Please fill out all required fields", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 },
                 enabled = itemName.value.isNotEmpty() && quantity.value.isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(containerColor = Sage)
             ) {
                 Text("Add to Inventory")
             }
 
-            Button(colors= ButtonDefaults.buttonColors(containerColor = Sage),
+            // --- Add to Grocery List Button ---
+            Button(
                 onClick = {
                     if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
-                        // Create a GroceryListItem object in db, price 默认 0.0
+                        // 1) Reserve a new DB key for the grocery item
+                        val groceryRef = FirebaseDatabaseManager
+                            .getUserGroceryListRef(userId)
+                            .push()
+                        val itemId = groceryRef.key ?: return@Button
+
+                        // 2) Create the grocery item without imageUrl
                         val qty = quantity.value.toIntOrNull() ?: 0
                         val price = priceEstimate.value.toDoubleOrNull() ?: 0.0
-                        val newItem =
-                            GroceryItem(
-                                name = itemName.value,
-                                quantity = qty,
-                                upc = upcCode.value,
-                                imageUrl = selectedImageUri.value?.toString(),
-                                estimatedPrice = price,
-                            )
-                        FirebaseDatabaseManager.addGroceryListItem(userId, newItem) { success, exception ->
-                            if (success && !isLandscape && !isTabletWidth) {
-                                navController.navigate("grocery_list")
-                            } else if (success && isLandscape) {
-                                navController.navigate("pantry_shopping_combined")
-                            } else if (success) {
-                                navController.navigate("tablet_portrait")
-                            } else {
-                                Toast
-                                    .makeText(
-                                        context,
-                                        "Failed to add item: ${exception?.message}",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
+                        val newItem = GroceryItem(
+                            id = itemId,
+                            name = itemName.value,
+                            quantity = qty,
+                            upc = upcCode.value,
+                            imageUrl = null,
+                            estimatedPrice = price
+                        )
+
+                        // 3) Write the item to Realtime Database
+                        groceryRef.setValue(newItem)
+                            .addOnCompleteListener { task ->
+                                if (!task.isSuccessful) {
+                                    Toast
+                                        .makeText(context, "Failed to add item: ${task.exception?.message}", Toast.LENGTH_SHORT)
+                                        .show()
+                                    return@addOnCompleteListener
+                                }
+
+                                // 4) Upload image or fallback
+                                selectedImageUri.value?.let { uri ->
+                                    if (uri.scheme?.startsWith("http") == true) {
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            try {
+                                                val conn = URL(uri.toString()).openConnection() as HttpURLConnection
+                                                conn.inputStream.use { input ->
+                                                    val tmp = File(context.cacheDir, "$itemId-api.jpg")
+                                                    FileOutputStream(tmp).use { out -> input.copyTo(out) }
+                                                    val fileUri = Uri.fromFile(tmp)
+                                                    FirebaseStorageManager.uploadItemImage(userId, "groceryList", itemId, fileUri) { dl ->
+                                                        dl?.let { url ->
+                                                            FirebaseDatabaseManager.updateGroceryListItem(userId, newItem.copy(imageUrl = url))
+                                                        }
+                                                    }
+                                                }
+                                            } catch (e: Exception) {
+                                                FirebaseDatabaseManager.updateGroceryListItem(userId, newItem.copy(imageUrl = uri.toString()))
+                                            }
+                                        }
+                                    } else {
+                                        FirebaseStorageManager.uploadItemImage(userId, "groceryList", itemId, uri) { dl ->
+                                            dl?.let { url ->
+                                                FirebaseDatabaseManager.updateGroceryListItem(userId, newItem.copy(imageUrl = url))
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 6) Navigate based on layout
+                                when {
+                                    !isLandscape && !isTabletWidth -> navController.navigate("grocery_list")
+                                    isLandscape -> navController.navigate("pantry_shopping_combined")
+                                    else -> navController.navigate("tablet_portrait")
+                                }
                             }
-                        }
                     }
                 },
                 enabled = itemName.value.isNotEmpty() && quantity.value.isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(containerColor = Sage)
             ) {
                 Text("Add to Grocery List")
             }
