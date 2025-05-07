@@ -453,6 +453,7 @@ fun Recipe() {
                             }
                         }
                     }
+                    if (!isLandscape) {
                     LazyRow(
                         state = displayRowState,
                         modifier = Modifier.fillMaxWidth().height(120.dp),
@@ -460,7 +461,8 @@ fun Recipe() {
                     ) {
                         items(count = Int.MAX_VALUE, key = { it }) { idx ->
                             val index = idx % SearchedList.size
-                            val correctedActualIndex = if (index < 0) idx + SearchedList.size else index
+                            val correctedActualIndex =
+                                if (index < 0) idx + SearchedList.size else index
                             AsyncImage(
                                 model = SearchedList[correctedActualIndex].image,
                                 contentDescription = "Images",
@@ -469,8 +471,9 @@ fun Recipe() {
                             )
                         }
                     }
+                    }
                 } else if (!recipeList.isEmpty()) {
-                    if (isTabletWidth || !isLandscape) {
+                    if (!isLandscape) {
                         LaunchedEffect(displayRowState, recipeList) {
                             snapshotFlow { displayRowState.layoutInfo.totalItemsCount }.first { it > 0 }
                             val midway =
@@ -489,20 +492,24 @@ fun Recipe() {
                         }
                     }
 
-                    LazyRow(
-                        state = displayRowState,
-                        modifier = Modifier.fillMaxWidth().height(120.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(count = Int.MAX_VALUE, key = { it }) { idx ->
-                            val index = idx % recipeList.size
-                            val correctedActualIndex = if (index < 0) idx + recipeList.size else index
-                            AsyncImage(
-                                model = recipeList[correctedActualIndex].image,
-                                contentDescription = "Images",
-                                modifier = Modifier.height(120.dp).clip(RoundedCornerShape(20.dp)),
-                                contentScale = ContentScale.Fit,
-                            )
+                    if (!isLandscape) {
+                        LazyRow(
+                            state = displayRowState,
+                            modifier = Modifier.fillMaxWidth().height(120.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            items(count = Int.MAX_VALUE, key = { it }) { idx ->
+                                val index = idx % recipeList.size
+                                val correctedActualIndex =
+                                    if (index < 0) idx + recipeList.size else index
+                                AsyncImage(
+                                    model = recipeList[correctedActualIndex].image,
+                                    contentDescription = "Images",
+                                    modifier = Modifier.height(120.dp)
+                                        .clip(RoundedCornerShape(20.dp)),
+                                    contentScale = ContentScale.Fit,
+                                )
+                            }
                         }
                     }
                 }
@@ -546,9 +553,10 @@ fun Recipe() {
                         ),
                     shape = RoundedCornerShape(50),
                     value = searchVal,
-                    onValueChange = { value: String ->
-                        searchVal =
-                            value
+                    onValueChange = {
+                        if (it.length <= 33) {
+                            searchVal = it
+                        }
                     },
                     placeholder = {
                         Text(
