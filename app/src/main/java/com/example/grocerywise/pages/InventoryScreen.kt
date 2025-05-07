@@ -79,6 +79,16 @@ import com.example.grocerywise.ProductLookupResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import com.example.grocerywise.data.FirebaseStorageManager
 
 
 // Dummy color list for usage bar visualization.
@@ -131,6 +141,10 @@ fun InventoryScreen(
     var pendingDelete by remember { mutableStateOf<InventoryItem?>(null) }
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
 
     // Listen to Firebase – use snapshot.key as unique ID
     LaunchedEffect(userId) {
@@ -283,33 +297,73 @@ fun InventoryScreen(
                 confirmButton = {
                     TextButton(onClick = {
                         userId?.let { uid ->
-                            val grocery = GroceryItem(
-                                id             = target.id,
-                                name           = target.name,
-                                quantity       = 1,
-                                upc            = target.upc,
-                                imageUrl       = target.imageUrl,
+                            // 1) Reserve new grocery key
+                            val groRef = FirebaseDatabaseManager
+                                .getUserGroceryListRef(uid)
+                                .push()
+                            val newGroId = groRef.key!!
+
+                            // 2) Build GroceryItem w/o imageUrl
+                            val groItem = GroceryItem(
+                                id = newGroId,
+                                name = target.name,
+                                quantity = 1,
+                                upc = target.upc,
+                                imageUrl = null,
                                 estimatedPrice = 0.0
                             )
-                            if (target.upc != null) {
-                                getPrices(target.upc) { price ->
-                                    if (price != null) {
-                                        grocery.estimatedPrice = price.toDouble()
+
+                            // 3) Write bare grocery item
+                            groRef.setValue(groItem).addOnCompleteListener { task ->
+                                if (!task.isSuccessful) return@addOnCompleteListener
+
+                                // 4) Re-upload original image
+                                target.imageUrl?.let { uriStr ->
+                                    val uri = Uri.parse(uriStr)
+                                    if (uri.scheme?.startsWith("http") == true) {
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            try {
+                                                val conn = URL(uriStr).openConnection() as HttpURLConnection
+                                                conn.inputStream.use { input ->
+                                                    val tmp = File(context.cacheDir, "$newGroId-temp.jpg")
+                                                    FileOutputStream(tmp).use { out -> input.copyTo(out) }
+                                                    FirebaseStorageManager.uploadItemImage(
+                                                        uid, "groceryList", newGroId, Uri.fromFile(tmp)
+                                                    ) { dl ->
+                                                        dl?.let { FirebaseDatabaseManager.updateGroceryListItem(
+                                                            uid, groItem.copy(imageUrl = it)
+                                                        ) }
+                                                    }
+                                                }
+                                            } catch (_: Exception) {
+                                                FirebaseDatabaseManager.updateGroceryListItem(
+                                                    uid, groItem.copy(imageUrl = uriStr)
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        FirebaseStorageManager.uploadItemImage(
+                                            uid, "groceryList", newGroId, uri
+                                        ) { dl ->
+                                            dl?.let { FirebaseDatabaseManager.updateGroceryListItem(
+                                                uid, groItem.copy(imageUrl = it)
+                                            ) }
+                                        }
                                     }
-                                    FirebaseDatabaseManager.addGroceryListItem(uid, grocery)
-                                    FirebaseDatabaseManager.removeInventoryItem(uid, target.id!!)
                                 }
-                            } else {
-                                FirebaseDatabaseManager.addGroceryListItem(uid, grocery)
-                                FirebaseDatabaseManager.removeInventoryItem(uid, target.id!!)
+
+                                // 5) Finally delete the inventory entry & its Storage file
+                                FirebaseDatabaseManager.removeInventoryItem(
+                                    uid, target.id!!, null
+                                )
                             }
                         }
                         pendingDelete = null
-
-                    }, colors = ButtonDefaults.textButtonColors(contentColor = Sage)) {
+                    }) {
                         Text("Yes")
                     }
-                },
+                }
+                ,
                 dismissButton = {
                     TextButton(onClick = {
                         userId?.let { FirebaseDatabaseManager.removeInventoryItem(it, target.id!!) }
