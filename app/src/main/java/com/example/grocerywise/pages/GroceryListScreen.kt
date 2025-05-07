@@ -1,6 +1,7 @@
 package com.example.grocerywise.pages
 
 import android.content.res.Configuration
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,12 +25,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -51,6 +54,15 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.grocerywise.ProfileViewModel
+import com.example.grocerywise.data.FirebaseStorageManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+
+
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -71,6 +83,9 @@ fun GroceryListScreen(
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val screenWidthDp = configuration.screenWidthDp
     val isTabletWidth = screenWidthDp >= 600
+
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     // Listen for changes in the inventory data from the database.
     LaunchedEffect(userId) {
@@ -246,30 +261,79 @@ fun GroceryListScreen(
         Spacer(Modifier.padding(8.dp))
         Column(horizontalAlignment = Alignment.Start) {
             Text("Total: $${"%.2f".format(totalCost)}", fontWeight = FontWeight.Bold, modifier = Modifier.padding(8.dp))
-            Button(colors= ButtonDefaults.buttonColors(containerColor = Sage), onClick = {
-                groceryItems.filter { it.isChecked }.forEach { checkedItem ->
-                    val inventoryItem = InventoryItem(
-                        name = checkedItem.name,
-                        quantity = checkedItem.quantity,
-                        imageUrl = checkedItem.imageUrl,
-                        upc = checkedItem.upc,
-                    )
-                    if (userId != null) {
-                        FirebaseDatabaseManager.addInventoryItem(userId, inventoryItem) { success, error ->
-                            if (!success) {
-                                Log.e("InventoryAdd", "Failed to add to inventory: ${error?.message}")
+            Button(
+                onClick = {
+                    groceryItems.filter { it.isChecked }.forEach { checkedItem ->
+                        // 1) Reserve new inventory key
+                        val invRef = FirebaseDatabaseManager
+                            .getUserInventoryRef(userId!!)
+                            .push()
+                        val newInvId = invRef.key!!
+
+                        // 2) Build the InventoryItem (no imageUrl yet)
+                        val invItem = InventoryItem(
+                            id = newInvId,
+                            name = checkedItem.name,
+                            quantity = checkedItem.quantity,
+                            upc = checkedItem.upc,
+                            expirationDate = null,
+                            imageUrl = null
+                        )
+
+                        // 3) Write bare item
+                        invRef.setValue(invItem).addOnCompleteListener { task ->
+                            if (!task.isSuccessful) return@addOnCompleteListener
+
+                            // 4) Re-upload image if present
+                            checkedItem.imageUrl?.let { uriStr ->
+                                val uri = Uri.parse(uriStr)
+                                if (uri.scheme?.startsWith("http") == true) {
+                                    // Download then upload
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        try {
+                                            val conn = URL(uriStr).openConnection() as HttpURLConnection
+                                            conn.inputStream.use { input ->
+                                                val tmp = File(context.cacheDir, "$newInvId-temp.jpg")
+                                                FileOutputStream(tmp).use { out -> input.copyTo(out) }
+                                                FirebaseStorageManager.uploadItemImage(
+                                                    userId, "inventory", newInvId, Uri.fromFile(tmp)
+                                                ) { dlUrl ->
+                                                    dlUrl?.let { FirebaseDatabaseManager.updateInventoryItem(
+                                                        userId, invItem.copy(imageUrl = it)
+                                                    ) }
+                                                }
+                                            }
+                                        } catch (_: Exception) {
+                                            // fallback: keep original URL
+                                            FirebaseDatabaseManager.updateInventoryItem(
+                                                userId, invItem.copy(imageUrl = uriStr)
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    // Local URI → direct upload
+                                    FirebaseStorageManager.uploadItemImage(
+                                        userId, "inventory", newInvId, uri
+                                    ) { dlUrl ->
+                                        dlUrl?.let { FirebaseDatabaseManager.updateInventoryItem(
+                                            userId, invItem.copy(imageUrl = it)
+                                        ) }
+                                    }
+                                }
                             }
-                        }
-                        FirebaseDatabaseManager.removeGroceryListItem(userId, checkedItem.id!!) { success, error ->
-                            if (!success) {
-                                Log.e("GroceryRemove", "Failed to remove grocery item: ${error?.message}")
-                            }
+
+                            // 5) Now delete from grocery list (and its Storage image)
+                            FirebaseDatabaseManager.removeGroceryListItem(
+                                userId, checkedItem.id!!, null
+                            )
                         }
                     }
-                }
-            }) {
+                },
+                // … your existing enabled/colors …
+            ) {
                 Text("Add Checked Items to Inventory")
             }
+
         }
     }
 }
