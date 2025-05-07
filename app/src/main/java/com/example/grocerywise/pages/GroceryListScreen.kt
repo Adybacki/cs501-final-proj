@@ -329,7 +329,7 @@ fun GroceryListScreen(
                         }
                     }
                 },
-                // … your existing enabled/colors …
+                colors= ButtonDefaults.buttonColors(containerColor = Sage),
             ) {
                 Text("Add Checked Items to Inventory")
             }
