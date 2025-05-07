@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +53,13 @@ import com.example.grocerywise.models.InventoryItem
 import com.example.grocerywise.ui.theme.Sage
 import com.example.grocerywise.data.FirebaseStorageManager
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+
 
 @Composable
 fun AddItemScreen(
@@ -83,6 +91,9 @@ fun AddItemScreen(
     val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid
+
+    // For downloading API images off the network
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier =
@@ -223,20 +234,34 @@ fun AddItemScreen(
                                     return@addOnCompleteListener
                                 }
 
-                                // 4) If an image was selected, upload to Storage
+                                // 4) Upload image (local URI or API URL)
                                 selectedImageUri.value?.let { uri ->
-                                    FirebaseStorageManager.uploadItemImage(
-                                        userId,
-                                        "inventory",
-                                        itemId,
-                                        uri
-                                    ) { downloadUrl ->
-                                        downloadUrl?.let { url ->
-                                            // 5) Update the item record with the download URL
-                                            FirebaseDatabaseManager.updateInventoryItem(
-                                                userId,
-                                                newItem.copy(imageUrl = url)
-                                            )
+                                    if (uri.scheme?.startsWith("http") == true) {
+                                        // Download from API then upload to Storage
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            try {
+                                                val conn = URL(uri.toString()).openConnection() as HttpURLConnection
+                                                conn.inputStream.use { input ->
+                                                    val tmp = File(context.cacheDir, "$itemId-api.jpg")
+                                                    FileOutputStream(tmp).use { out -> input.copyTo(out) }
+                                                    val fileUri = Uri.fromFile(tmp)
+                                                    FirebaseStorageManager.uploadItemImage(userId, "inventory", itemId, fileUri) { dl ->
+                                                        dl?.let { url ->
+                                                            FirebaseDatabaseManager.updateInventoryItem(userId, newItem.copy(imageUrl = url))
+                                                        }
+                                                    }
+                                                }
+                                            } catch (e: Exception) {
+                                                // Fallback: save original API URL
+                                                FirebaseDatabaseManager.updateInventoryItem(userId, newItem.copy(imageUrl = uri.toString()))
+                                            }
+                                        }
+                                    } else {
+                                        // Local URI → upload directly
+                                        FirebaseStorageManager.uploadItemImage(userId, "inventory", itemId, uri) { dl ->
+                                            dl?.let { url ->
+                                                FirebaseDatabaseManager.updateInventoryItem(userId, newItem.copy(imageUrl = url))
+                                            }
                                         }
                                     }
                                 }
@@ -292,20 +317,31 @@ fun AddItemScreen(
                                     return@addOnCompleteListener
                                 }
 
-                                // 4) Upload selected image to Storage
+                                // 4) Upload image or fallback
                                 selectedImageUri.value?.let { uri ->
-                                    FirebaseStorageManager.uploadItemImage(
-                                        userId,
-                                        "groceryList",
-                                        itemId,
-                                        uri
-                                    ) { downloadUrl ->
-                                        downloadUrl?.let { url ->
-                                            // 5) Update the grocery item with download URL
-                                            FirebaseDatabaseManager.updateGroceryListItem(
-                                                userId,
-                                                newItem.copy(imageUrl = url)
-                                            )
+                                    if (uri.scheme?.startsWith("http") == true) {
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            try {
+                                                val conn = URL(uri.toString()).openConnection() as HttpURLConnection
+                                                conn.inputStream.use { input ->
+                                                    val tmp = File(context.cacheDir, "$itemId-api.jpg")
+                                                    FileOutputStream(tmp).use { out -> input.copyTo(out) }
+                                                    val fileUri = Uri.fromFile(tmp)
+                                                    FirebaseStorageManager.uploadItemImage(userId, "groceryList", itemId, fileUri) { dl ->
+                                                        dl?.let { url ->
+                                                            FirebaseDatabaseManager.updateGroceryListItem(userId, newItem.copy(imageUrl = url))
+                                                        }
+                                                    }
+                                                }
+                                            } catch (e: Exception) {
+                                                FirebaseDatabaseManager.updateGroceryListItem(userId, newItem.copy(imageUrl = uri.toString()))
+                                            }
+                                        }
+                                    } else {
+                                        FirebaseStorageManager.uploadItemImage(userId, "groceryList", itemId, uri) { dl ->
+                                            dl?.let { url ->
+                                                FirebaseDatabaseManager.updateGroceryListItem(userId, newItem.copy(imageUrl = url))
+                                            }
                                         }
                                     }
                                 }
