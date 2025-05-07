@@ -136,12 +136,14 @@ fun hexToColor(hex: String): Color {
 fun InventoryScreen(
     onAvatarClick: () -> Unit
 ) {
+    // -- State & Context Initialization --
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
     var pendingDelete by remember { mutableStateOf<InventoryItem?>(null) }
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
+    // -- Listen for inventory changes in Realtime Database --
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -170,7 +172,7 @@ fun InventoryScreen(
         FirebaseDatabaseManager.listenToInventory(userId, listener)
     }
 
-    // Compute usage-bar
+    // -- Usage bar computation: percentage of total --
     val total = inventoryItems.sumOf { it.quantity }
     val percList = if (total == 0) emptyList() else
         inventoryItems.map { it.name to (it.quantity.toFloat() / total) }
