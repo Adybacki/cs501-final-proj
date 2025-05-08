@@ -89,7 +89,7 @@ fun RecipeCard(
                         Text(
                             maxLines = 2,
                             text = ing.name,
-                            color = Sage,
+                            color = Color(0xFF9DC183),
                             fontWeight = FontWeight.W400,
                             fontSize = 18.sp,
                         )
