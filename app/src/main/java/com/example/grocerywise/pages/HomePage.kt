@@ -3,7 +3,6 @@ package com.example.grocerywise.pages
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -254,7 +253,6 @@ fun getProductDetails(
     navController: NavController,
 ) {
     val request = ProductLookupRequest(upc)
-    Log.d("API Request", "Sending UPC: $request")
 
     ApiClient.apiService.lookupProduct(request).enqueue(
         object : Callback<ProductLookupResponse> {
