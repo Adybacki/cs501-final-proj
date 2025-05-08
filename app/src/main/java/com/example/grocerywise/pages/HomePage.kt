@@ -83,7 +83,7 @@ fun HomePage(
         .setBarcodeFormats(Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E)
         .enableAutoZoom()
         .build()
-    val scanner = GmsBarcodeScanning.getClient(context)
+    val scanner = GmsBarcodeScanning.getClient(context, options)
 
     // 5. Floating menu state
     val showMenu = remember { mutableStateOf(false) }
@@ -119,7 +119,7 @@ fun HomePage(
                 useCombinedLayout = useCombinedLayout
             )
         },
-        // Keep your existing FAB menu—it will float over whichever screen is active
+        // FAB menu will float over whichever screen is active
         floatingActionButton = {
             Column {
                 if (showMenu.value) {
@@ -289,10 +289,6 @@ fun getProductDetails(
                             "add_item?productName=$encodedName&productUpc=$encodedUpc&productPrice=$encodedPrice&productImageUri=$encodedImage",
                         )
                     }
-                } else {
-                    // Handle API error
-                    Log.i("Error", "${response.errorBody()?.string()}")
-                    Log.e("API Error", "Error: ${response.code()} - ${response.message()}")
                 }
             }
 
@@ -300,8 +296,6 @@ fun getProductDetails(
                 call: Call<ProductLookupResponse>,
                 t: Throwable,
             ) {
-                // Handle failure
-                Log.e("Network Error", "Failure: ${t.message}")
             }
         },
     )
