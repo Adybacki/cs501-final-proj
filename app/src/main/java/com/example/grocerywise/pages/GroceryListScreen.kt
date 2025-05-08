@@ -2,7 +2,6 @@ package com.example.grocerywise.pages
 
 import android.content.res.Configuration
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -62,9 +61,6 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-
-
-
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun GroceryListScreen(
@@ -104,7 +100,6 @@ fun GroceryListScreen(
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-                        Log.e("GroceryListScreen", "Data listener error: ${error.message}")
                     }
                 }
             FirebaseDatabaseManager.listenToGroceryList(userId, listener)
@@ -126,7 +121,7 @@ fun GroceryListScreen(
             val profileViewModel: ProfileViewModel = viewModel()
             val avatarUrl by profileViewModel.avatarUrl.collectAsState()
 
-// Show avatar instead of text
+            // Show avatar instead of text
             if (!isTabletWidth || isLandscape) {
                 AsyncImage(
                     model = avatarUrl,
@@ -146,6 +141,8 @@ fun GroceryListScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
         }
+
+        // Check all items button
         Button(colors= ButtonDefaults.buttonColors(containerColor = Sage), onClick = {
             groceryItems.forEach { item ->
                 val updatedItem = item.copy(isChecked = true)
@@ -158,6 +155,7 @@ fun GroceryListScreen(
             Text("Check All Items")
         }
 
+        // display placeholder text if list is empty
         if (groceryItems.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -182,16 +180,7 @@ fun GroceryListScreen(
                                 FirebaseDatabaseManager.removeGroceryListItem(
                                     userId!!,
                                     item.id!!
-                                ) { success, exception ->
-                                    if (success) {
-                                        Log.d("GroceryList", "Item removed successfully.")
-                                    } else {
-                                        Log.e(
-                                            "GroceryList",
-                                            "Error removing item: ${exception?.message}"
-                                        )
-                                    }
-                                }
+                                )
                                 true
                             } else false
                         }
@@ -224,6 +213,7 @@ fun GroceryListScreen(
                             }
                         },
                         dismissContent = {
+                            // display all users grocery list items with swipe to delete funcitonality
                             if (userId != null) {
                                 GroceryListItem(
                                     item = item,
@@ -246,6 +236,7 @@ fun GroceryListScreen(
         }
 
         showEditDialog.value?.let { itemToEdit ->
+            // Edit grocery item dialog
             EditGroceryItemDialog(
                 item = itemToEdit,
                 onDismiss = { showEditDialog.value = null },
@@ -259,8 +250,12 @@ fun GroceryListScreen(
         }
 
         Spacer(Modifier.padding(8.dp))
+
         Column(horizontalAlignment = Alignment.Start) {
+            // Total cost label
             Text("Total: $${"%.2f".format(totalCost)}", fontWeight = FontWeight.Bold, modifier = Modifier.padding(8.dp))
+
+            // Button to add all checked items to inventory list and make necessary db changes
             Button(
                 onClick = {
                     groceryItems.filter { it.isChecked }.forEach { checkedItem ->
