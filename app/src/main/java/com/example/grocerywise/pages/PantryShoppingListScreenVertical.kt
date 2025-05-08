@@ -10,18 +10,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.grocerywise.AuthViewModel
 
 @Composable
 fun PantryShoppingListScreenVertical(
-    authViewModel: AuthViewModel,
-    bottomNavController: NavController,
     onAvatarClick: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // Left pane: Pantry
+        // Top pane: Pantry
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -39,7 +35,7 @@ fun PantryShoppingListScreenVertical(
                 .width(1.dp)
         )
 
-        // Right pane: Grocery List
+        // Bottom pane: Grocery List
         Box(
             modifier = Modifier
                 .weight(1f)

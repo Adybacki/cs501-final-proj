@@ -34,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -59,7 +58,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-
 
 @Composable
 fun AddItemScreen(
@@ -108,6 +106,7 @@ fun AddItemScreen(
             Font(resId = R.font.nunitobold)
         ))
 
+        // Name field
         OutlinedTextField(
             value = itemName.value,
             onValueChange = {
@@ -125,6 +124,8 @@ fun AddItemScreen(
         )
 
         Row(modifier = Modifier.fillMaxWidth()) {
+
+            // Price field
             OutlinedTextField(
                 value = priceEstimate.value,
                 onValueChange = { newValue ->
@@ -144,6 +145,8 @@ fun AddItemScreen(
                 ),
             )
             Spacer(modifier = Modifier.width(12.dp))
+
+            // Quantity field
             OutlinedTextField(
                 value = quantity.value,
                 onValueChange = { newValue ->
@@ -165,6 +168,8 @@ fun AddItemScreen(
 
         Row ( modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically ) {
+
+            // UPC code field
             OutlinedTextField(
                 value = upcCode.value,
                 onValueChange = { newValue ->
@@ -179,16 +184,20 @@ fun AddItemScreen(
                     focusedBorderColor = Sage,
                 ),
             )
+
+            // UPC lookup button
             Button(onClick = { getProductDetails(upcCode.value, navController)}, modifier = Modifier.padding(4.dp), colors= ButtonDefaults.buttonColors(containerColor = Sage),) {
                 Icon(Icons.Default.Search, contentDescription = "Search UPC")
             }
         }
 
+        // Image selector button
         Button(onClick = { imagePickerLauncher.launch("image/*") }, colors= ButtonDefaults.buttonColors(containerColor = Sage),) {
             Text("Upload Photo")
         }
 
         selectedImageUri.value?.let { uri ->
+            //Display selected image
             Image(
                 painter = rememberAsyncImagePainter(uri),
                 contentDescription = "Selected Image",
@@ -205,6 +214,7 @@ fun AddItemScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
+            //Add to inventory button
             Button(
                 onClick = {
                     if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {
@@ -285,7 +295,7 @@ fun AddItemScreen(
                 Text("Add to Inventory")
             }
 
-            // --- Add to Grocery List Button ---
+            // Add to Grocery List Button
             Button(
                 onClick = {
                     if (itemName.value.isNotEmpty() && quantity.value.isNotEmpty() && userId != null) {

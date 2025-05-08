@@ -3,7 +3,6 @@ package com.example.grocerywise.pages
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -83,7 +82,7 @@ fun HomePage(
         .setBarcodeFormats(Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E)
         .enableAutoZoom()
         .build()
-    val scanner = GmsBarcodeScanning.getClient(context)
+    val scanner = GmsBarcodeScanning.getClient(context, options)
 
     // 5. Floating menu state
     val showMenu = remember { mutableStateOf(false) }
@@ -116,10 +115,9 @@ fun HomePage(
         bottomBar = {
             BottomNavBar(
                 navController = bottomNavController,
-                useCombinedLayout = useCombinedLayout
             )
         },
-        // Keep your existing FAB menu—it will float over whichever screen is active
+        // FAB menu will float over whichever screen is active
         floatingActionButton = {
             Column {
                 if (showMenu.value) {
@@ -214,8 +212,6 @@ fun HomePage(
             // Combined Pantry & Shopping List (tablet-landscape only)
             composable("pantry_shopping_combined") {
                 PantryAndShoppingListScreen(
-                    authViewModel = authViewModel,
-                    bottomNavController= bottomNavController,
                     onAvatarClick      = { navController.navigate("profile") }
 
                 )
@@ -223,8 +219,6 @@ fun HomePage(
 
             composable("tablet_portrait") {
                 PantryShoppingListScreenVertical(
-                    authViewModel = authViewModel,
-                    bottomNavController = bottomNavController,
                     onAvatarClick = {navController.navigate("profile")}
                 )
             }
@@ -259,7 +253,6 @@ fun getProductDetails(
     navController: NavController,
 ) {
     val request = ProductLookupRequest(upc)
-    Log.d("API Request", "Sending UPC: $request")
 
     ApiClient.apiService.lookupProduct(request).enqueue(
         object : Callback<ProductLookupResponse> {
@@ -289,10 +282,6 @@ fun getProductDetails(
                             "add_item?productName=$encodedName&productUpc=$encodedUpc&productPrice=$encodedPrice&productImageUri=$encodedImage",
                         )
                     }
-                } else {
-                    // Handle API error
-                    Log.i("Error", "${response.errorBody()?.string()}")
-                    Log.e("API Error", "Error: ${response.code()} - ${response.message()}")
                 }
             }
 
@@ -300,8 +289,6 @@ fun getProductDetails(
                 call: Call<ProductLookupResponse>,
                 t: Throwable,
             ) {
-                // Handle failure
-                Log.e("Network Error", "Failure: ${t.message}")
             }
         },
     )

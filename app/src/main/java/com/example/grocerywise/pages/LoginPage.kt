@@ -1,4 +1,5 @@
 package com.example.grocerywise.pages
+
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,7 +49,6 @@ fun LoginPage(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-//    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
     var hit by remember { mutableStateOf(false) }
     val authState = authViewModel.authState.observeAsState()
 
@@ -57,6 +57,7 @@ fun LoginPage(
     val animatable = rememberLottieAnimatable()
     val rejection by rememberLottieComposition(LottieCompositionSpec.Asset("animations/reject.json"))
 
+    // Add loading/error animations
     LaunchedEffect(authState.value, loginAni) {
         when (authState.value) {
             is AuthState.Authenticated -> {
@@ -102,8 +103,7 @@ fun LoginPage(
             } else -> Unit
         }
     }
-    // when (info) {
-    // WindowWidthSizeClass.COMPACT -> {
+
     when (authState.value) {
         is AuthState.Authenticated -> {
             Column(
@@ -135,6 +135,7 @@ fun LoginPage(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
+                // Email field (limit to 40 characters)
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it.take(40) },
@@ -150,6 +151,7 @@ fun LoginPage(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Password field (limit to 40 characters)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it.take(40) },
@@ -166,6 +168,7 @@ fun LoginPage(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Login button
                 Button(
                     onClick = {
                         hit = true
@@ -200,6 +203,7 @@ fun LoginPage(
 
                 Spacer(Modifier.height(8.dp))
 
+                //Sign up button
                 TextButton(onClick = {
                     navController.navigate("signup")
                 }) {

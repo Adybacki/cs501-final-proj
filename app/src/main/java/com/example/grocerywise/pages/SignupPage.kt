@@ -44,6 +44,7 @@ fun SignupPage(
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
 
+    //check authentication state
     LaunchedEffect(authState.value) {
         when (authState.value) {
             is AuthState.Authenticated -> navController.navigate("home")
@@ -61,6 +62,7 @@ fun SignupPage(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Email field (limited for 40 characters)
         OutlinedTextField(
             value = email,
             onValueChange = { email = it.take(40) },
@@ -76,6 +78,7 @@ fun SignupPage(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        //Password field (limited to 40 characters)
         OutlinedTextField(
             value = password,
             onValueChange = { password = it.take(40) },
@@ -91,6 +94,7 @@ fun SignupPage(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        //Create account button
         Button(
             onClick = {
                 authViewModel.signup(email, password)
@@ -106,6 +110,7 @@ fun SignupPage(
 
         Spacer(modifier = Modifier.height(5.dp))
 
+        // Go to login screen button
         TextButton(onClick = {
             navController.navigate("login")
         }) { Text("Already have an account? Login here", color = Sage) }

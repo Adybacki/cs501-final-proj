@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -79,58 +78,33 @@ import com.example.grocerywise.ProductLookupResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-
-
-// Dummy color list for usage bar visualization.
-val colors: List<String> =
-    listOf(
-        "#FFFF00",
-        "#FFC0CB",
-        "#00FF00",
-        "#0000FF",
-        "#FFA500",
-        "#800080",
-        "#ADD8E6",
-        "#90EE90",
-        "#FFB6C1",
-        "#FFFFE0",
-        "#40E0D0",
-        "#E6E6FA",
-        "#FF7F50",
-        "#98FF98",
-        "#FFDAB9",
-        "#87CEEB",
-        "#32CD32",
-        "#FF00FF",
-        "#00FFFF",
-        "#FFFF33",
-        "#FF6EC7",
-        "#39FF14",
-        "#FF5F1F",
-        "#FDFD96",
-        "#FFD1DC",
-        "#77DD77",
-        "#AEC6CF",
-        "#B19CD9",
-    )
-
-// Convert a hex string to a Color.
-fun hexToColor(hex: String): Color {
-    val color = hex.removePrefix("#").toLong(16)
-    return Color(color or 0xFF000000L)
-}
-
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import com.example.grocerywise.data.FirebaseStorageManager
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun InventoryScreen(
     onAvatarClick: () -> Unit
 ) {
+    // -- State & Context Initialization --
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val inventoryItems = remember { mutableStateListOf<InventoryItem>() }
     var pendingDelete by remember { mutableStateOf<InventoryItem?>(null) }
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // -- Listen for inventory changes in Realtime Database --
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
 
     // Listen to Firebase – use snapshot.key as unique ID
     LaunchedEffect(userId) {
@@ -155,12 +129,6 @@ fun InventoryScreen(
         }
         FirebaseDatabaseManager.listenToInventory(userId, listener)
     }
-
-    // Compute usage-bar
-    val total = inventoryItems.sumOf { it.quantity }
-    val percList = if (total == 0) emptyList() else
-        inventoryItems.map { it.name to (it.quantity.toFloat() / total) }
-    val shuffled = remember { colors.shuffled() }
 
     Column(
         modifier = Modifier
@@ -195,33 +163,6 @@ fun InventoryScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        // Usage bar
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .clip(RoundedCornerShape(50)),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                percList.forEachIndexed { i, (name, frac) ->
-                    Box(
-                        Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(frac)
-                            .background(hexToColor(shuffled[i % shuffled.size])),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            name,
-                            fontSize = 10.sp,
-                            fontFamily = FontFamily(Font(R.font.nunitobold)),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(2.dp)
-                        )
-                    }
-                }
-            }
 
         // Placeholder text for empty inventory list
         if (inventoryItems.isEmpty()) {
@@ -260,7 +201,7 @@ fun InventoryScreen(
         // Delete confirmation dialog to add removed items back into grocery list
         pendingDelete?.let { target ->
             AlertDialog(
-                onDismissRequest = { pendingDelete = null },
+                onDismissRequest = {},
                 title = {
                     Row(
                         Modifier.fillMaxWidth(),
@@ -271,45 +212,86 @@ fun InventoryScreen(
                             text = "Remove “${target.name}”?",
                             fontFamily = FontFamily(Font(resId = R.font.nunitobold))
                         )
-                        IconButton(onClick = { pendingDelete = null }) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Dismiss",
-                            )
-                        }
                     }
                 },
                 text = { Text("Add it to your grocery list before deleting?") },
                 confirmButton = {
                     TextButton(onClick = {
                         userId?.let { uid ->
-                            val grocery = GroceryItem(
-                                id             = target.id,
-                                name           = target.name,
-                                quantity       = 1,
-                                upc            = target.upc,
-                                imageUrl       = target.imageUrl,
+                            // 1) Reserve new grocery key
+                            val groRef = FirebaseDatabaseManager
+                                .getUserGroceryListRef(uid)
+                                .push()
+                            val newGroId = groRef.key!!
+
+                            // 2) Build GroceryItem w/o imageUrl
+                            val groItem = GroceryItem(
+                                id = newGroId,
+                                name = target.name,
+                                quantity = 1,
+                                upc = target.upc,
+                                imageUrl = null,
                                 estimatedPrice = 0.0
                             )
                             if (target.upc != null) {
                                 getPrices(target.upc) { price ->
                                     if (price != null) {
-                                        grocery.estimatedPrice = price.toDouble()
+                                        groItem.estimatedPrice = price.toDouble()
                                     }
-                                    FirebaseDatabaseManager.addGroceryListItem(uid, grocery)
-                                    FirebaseDatabaseManager.removeInventoryItem(uid, target.id!!)
                                 }
-                            } else {
-                                FirebaseDatabaseManager.addGroceryListItem(uid, grocery)
-                                FirebaseDatabaseManager.removeInventoryItem(uid, target.id!!)
+                            }
+
+                            // 3) Write bare grocery item
+                            groRef.setValue(groItem).addOnCompleteListener { task ->
+                                if (!task.isSuccessful) return@addOnCompleteListener
+
+                                // 4) Re-upload original image
+                                target.imageUrl?.let { uriStr ->
+                                    val uri = Uri.parse(uriStr)
+                                    if (uri.scheme?.startsWith("http") == true) {
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            try {
+                                                val conn = URL(uriStr).openConnection() as HttpURLConnection
+                                                conn.inputStream.use { input ->
+                                                    val tmp = File(context.cacheDir, "$newGroId-temp.jpg")
+                                                    FileOutputStream(tmp).use { out -> input.copyTo(out) }
+                                                    FirebaseStorageManager.uploadItemImage(
+                                                        uid, "groceryList", newGroId, Uri.fromFile(tmp)
+                                                    ) { dl ->
+                                                        dl?.let { FirebaseDatabaseManager.updateGroceryListItem(
+                                                            uid, groItem.copy(imageUrl = it)
+                                                        ) }
+                                                    }
+                                                }
+                                            } catch (_: Exception) {
+                                                FirebaseDatabaseManager.updateGroceryListItem(
+                                                    uid, groItem.copy(imageUrl = uriStr)
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        FirebaseStorageManager.uploadItemImage(
+                                            uid, "groceryList", newGroId, uri
+                                        ) { dl ->
+                                            dl?.let { FirebaseDatabaseManager.updateGroceryListItem(
+                                                uid, groItem.copy(imageUrl = it)
+                                            ) }
+                                        }
+                                    }
+                                }
+
+                                // 5) Finally delete the inventory entry & its Storage file
+                                FirebaseDatabaseManager.removeInventoryItem(
+                                    uid, target.id!!, null
+                                )
                             }
                         }
                         pendingDelete = null
-
-                    }, colors = ButtonDefaults.textButtonColors(contentColor = Sage)) {
+                    }) {
                         Text("Yes")
                     }
-                },
+                }
+                ,
                 dismissButton = {
                     TextButton(onClick = {
                         userId?.let { FirebaseDatabaseManager.removeInventoryItem(it, target.id!!) }

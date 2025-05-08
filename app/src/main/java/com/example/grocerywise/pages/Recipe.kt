@@ -20,13 +20,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,7 +62,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -88,9 +85,9 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 
+//Recipe screen
 @Composable
 fun Recipe() {
-    val info = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
     var searchVal by remember { mutableStateOf("") }
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val categorization: MutableList<String> = remember { mutableStateListOf() }
@@ -126,13 +123,6 @@ fun Recipe() {
         if (userId != null) {
             if (search && !done) {
                 val searchValue = searchVal.trim()
-//
-//                try {
-//                    searchValue = URLEncoder.encode(searchVal.trim(), StandardCharsets.UTF_8.name()).replace("+", "%20")
-//                } catch (e: Exception) {
-//                    errDisplay =
-//                        "Sorry we couldn't understand your search. Please check if there's a typo"
-//                }
 
                 if (searchValue != "") {
                     Log.i("searchVal", searchValue)
@@ -176,11 +166,10 @@ fun Recipe() {
 
             inventoryItem.listIterator().forEach { item ->
                 val itemName = item.name
-//                val upc = item.upc
-// get the classification based
+                // get the classification based
                 val requestBody = ClassifyRequestBody(title = itemName)
                 val catgoryname = ApiClient.ctgService.getIg(requestBody = requestBody, apikey = apiKey)
-//                Log.i("category", itemName)
+
                 val ctgryName = catgoryname.category
                 if (catgoryname.category != "unknown") {
                     categorization.add(ctgryName)

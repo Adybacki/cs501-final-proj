@@ -10,13 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.grocerywise.AuthViewModel
 
+// Compact screen for landscape layouts
 @Composable
 fun PantryAndShoppingListScreen(
-    authViewModel: AuthViewModel,
-    bottomNavController: NavController,
     onAvatarClick: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxSize()) {

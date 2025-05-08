@@ -74,14 +74,6 @@ fun ProfilePage(
         }
         Spacer(Modifier.height(24.dp))
 
-        // -- Back button --
-        Button(onClick = {
-            navController.popBackStack()   // go back to the previous screen
-        }, colors = ButtonDefaults.buttonColors(containerColor = Sage)) {
-            Text("Back")
-        }
-        Spacer(Modifier.height(16.dp))
-
         // -- Log out button --
         Button(onClick = {
             // 1) Sign the user out

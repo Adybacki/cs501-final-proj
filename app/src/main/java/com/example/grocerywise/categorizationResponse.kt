@@ -4,6 +4,7 @@ package com.example.grocerywise
 
 import com.squareup.moshi.Json
 
+//Parse response from Spoonacular categorization api
 data class CtgResponse(
     @Json(name = "category") val category: String,
     @Json(name = "usdaCode") val usda: Int?,

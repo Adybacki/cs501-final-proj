@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+//Authentication view model
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -16,7 +17,7 @@ class AuthViewModel : ViewModel() {
         checkAuthStatus()
     }
 
-    fun checkAuthStatus() {
+    private fun checkAuthStatus() {
         if (auth.currentUser == null) {
             _authState.value = AuthState.Unauthenticated
         } else {
@@ -24,6 +25,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    //Login function
     fun login(
         email: String,
         password: String,
@@ -50,6 +52,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    //signup function
     fun signup(
         email: String,
         password: String,
@@ -76,6 +79,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    //signout function
     fun signout() {
         auth.signOut()
         _authState.value = AuthState.Unauthenticated
@@ -102,11 +106,11 @@ class AuthViewModel : ViewModel() {
 }
 
 sealed class AuthState {
-    object Authenticated : AuthState()
+    data object Authenticated : AuthState()
 
-    object Unauthenticated : AuthState()
+    data object Unauthenticated : AuthState()
 
-    object Loading : AuthState()
+    data object Loading : AuthState()
 
     data class Error(
         val message: String,

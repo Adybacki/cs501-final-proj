@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -17,15 +17,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.grocerywise.ui.theme.Brown
 import com.example.grocerywise.ui.theme.Sage
 
 @Composable
-fun BottomNavBar(navController: NavController, useCombinedLayout: Boolean) {
+fun BottomNavBar(navController: NavController) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val screenWidthDp = configuration.screenWidthDp
-// treat 600 dp+ as “tablet”
+
+    // treat 600 dp+ as “tablet”
     val isTabletWidth = screenWidthDp >= 600
     BottomNavigation(backgroundColor = Sage) {
 
@@ -35,9 +35,9 @@ fun BottomNavBar(navController: NavController, useCombinedLayout: Boolean) {
                 icon = {
                     // Use a “list” icon to represent the merged pantry+shopping view
                     Icon(
-                        imageVector = Icons.Default.List,
-                        contentDescription = "Pantry & Shopping",
-                        tint = Color.White
+                    imageVector = Icons.AutoMirrored.Filled.List,
+                    contentDescription = "Pantry & Shopping",
+                    tint = Color.White
                     )
                 },
                 label = { Text("Pantry & Grocery List", color = Color.White) },
@@ -52,6 +52,8 @@ fun BottomNavBar(navController: NavController, useCombinedLayout: Boolean) {
                     }
                 }
             )
+
+            //Recipes bottom nav item
             BottomNavigationItem(
                 icon = {
                     Icon(

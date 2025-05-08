@@ -2,14 +2,12 @@ package com.example.grocerywise
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 class ProfileViewModel : ViewModel() {
     private val _avatarUrl = MutableStateFlow<String?>(null)
@@ -17,8 +15,6 @@ class ProfileViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
     private val userId = auth.currentUser?.uid
-
-    private val db = FirebaseDatabase.getInstance()
 
     init {
         // Listen for changes to users/{uid}/avatarUrl
@@ -29,7 +25,7 @@ class ProfileViewModel : ViewModel() {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         _avatarUrl.value = snapshot.getValue(String::class.java)
                     }
-                    override fun onCancelled(error: DatabaseError) { /* handle error */ }
+                    override fun onCancelled(error: DatabaseError) { }
                 })
         }
     }
@@ -52,11 +48,6 @@ class ProfileViewModel : ViewModel() {
                         FirebaseDatabaseManager.setAvatarUrl(uid, downloadUri.toString())
                     }
             }
-            .addOnFailureListener { /* handle error */ }
-    }
-
-    /** Sign out the current user. */
-    fun signOut() {
-        auth.signOut()
+            .addOnFailureListener {}
     }
 }
