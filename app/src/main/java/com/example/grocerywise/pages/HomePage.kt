@@ -116,7 +116,6 @@ fun HomePage(
         bottomBar = {
             BottomNavBar(
                 navController = bottomNavController,
-                useCombinedLayout = useCombinedLayout
             )
         },
         // FAB menu will float over whichever screen is active
@@ -214,8 +213,6 @@ fun HomePage(
             // Combined Pantry & Shopping List (tablet-landscape only)
             composable("pantry_shopping_combined") {
                 PantryAndShoppingListScreen(
-                    authViewModel = authViewModel,
-                    bottomNavController= bottomNavController,
                     onAvatarClick      = { navController.navigate("profile") }
 
                 )
@@ -223,8 +220,6 @@ fun HomePage(
 
             composable("tablet_portrait") {
                 PantryShoppingListScreenVertical(
-                    authViewModel = authViewModel,
-                    bottomNavController = bottomNavController,
                     onAvatarClick = {navController.navigate("profile")}
                 )
             }

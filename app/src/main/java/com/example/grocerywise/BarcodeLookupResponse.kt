@@ -2,6 +2,7 @@ package com.example.grocerywise
 
 import com.squareup.moshi.Json
 
+//Parse UPC lookup API response
 data class ProductLookupResponse(
     @Json(name = "items") val items: List<ProductItem>,
 )

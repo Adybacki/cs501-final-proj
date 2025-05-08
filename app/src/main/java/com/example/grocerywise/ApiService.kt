@@ -20,8 +20,7 @@ data class ClassifyRequestBody(
     val title: String,
 )
 
-// data class IgRequest(val upc:String, val name: String? )
-// Retrofit API service interface
+// Retrofit API service interfaces
 
 interface RecipeService {
     @Headers("Content-Type: application/json")
@@ -74,8 +73,8 @@ interface Categorization {
 
 // Singleton object to provide Retrofit API client
 object ApiClient {
-    private const val BASE_URL = "https://api.upcitemdb.com/" // Base URL for GitHub's API
-    private const val Category_url = "https://api.spoonacular.com/" // for fetching Ingredients
+    private const val BASE_URL = "https://api.upcitemdb.com/" // Base URL for UPC lookup API
+    private const val Category_url = "https://api.spoonacular.com/" // API for fetching Ingredients/Recipes
     private val moshi =
         Moshi
             .Builder()

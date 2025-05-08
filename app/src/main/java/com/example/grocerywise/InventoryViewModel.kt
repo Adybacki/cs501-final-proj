@@ -1,8 +1,6 @@
 package com.example.grocerywise
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.grocerywise.data.FirebaseDatabaseManager
 import com.example.grocerywise.models.InventoryItem
 import com.google.firebase.auth.FirebaseAuth
@@ -12,23 +10,13 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.distinctUntilChanged
-
-
+// ViewModel to prevent store user recipes to avoid recalling api if inventory not changed
 class InventoryViewModel : ViewModel() {
     private val _inventoryItems = MutableStateFlow<List<InventoryItem>>(emptyList())
     private val _prev = mutableListOf<InventoryItem>()
     private val _rcpResponse = mutableListOf<RecipeResponse>()
-//    val inventoryItems: StateFlow<List<InventoryItem>> = _inventoryItems.distinctUntilChanged().stateIn(scope = viewModelScope)
 val inventoryItems: StateFlow<List<InventoryItem>> = _inventoryItems // Apply distinctUntilChanged
     val Rcplist: List<RecipeResponse> = _rcpResponse
-//    .stateIn(
-//        scope = viewModelScope,
-//        started = SharingStarted.WhileSubscribed(5000L),
-//        initialValue = emptyList()
-//    )
     val pre: List<InventoryItem> = _prev
 
     init {
@@ -43,7 +31,6 @@ val inventoryItems: StateFlow<List<InventoryItem>> = _inventoryItems // Apply di
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-                        Log.e("InventoryViewModel", "Data fetch error: ${error.message}")
                     }
                 },
             )

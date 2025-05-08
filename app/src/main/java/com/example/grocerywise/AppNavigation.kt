@@ -53,8 +53,6 @@ fun AppNavigation(
         }
         composable("pantry_shopping_combined") {
             PantryAndShoppingListScreen(
-                authViewModel = authViewModel,
-                bottomNavController = navController,
                 onAvatarClick       = { navController.navigate("profile") }
             )
         }
