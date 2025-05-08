@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -90,47 +89,6 @@ import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
 import com.example.grocerywise.data.FirebaseStorageManager
 
-
-// Dummy color list for usage bar visualization.
-val colors: List<String> =
-    listOf(
-        "#FFFF00",
-        "#FFC0CB",
-        "#00FF00",
-        "#0000FF",
-        "#FFA500",
-        "#800080",
-        "#ADD8E6",
-        "#90EE90",
-        "#FFB6C1",
-        "#FFFFE0",
-        "#40E0D0",
-        "#E6E6FA",
-        "#FF7F50",
-        "#98FF98",
-        "#FFDAB9",
-        "#87CEEB",
-        "#32CD32",
-        "#FF00FF",
-        "#00FFFF",
-        "#FFFF33",
-        "#FF6EC7",
-        "#39FF14",
-        "#FF5F1F",
-        "#FDFD96",
-        "#FFD1DC",
-        "#77DD77",
-        "#AEC6CF",
-        "#B19CD9",
-    )
-
-// Convert a hex string to a Color.
-fun hexToColor(hex: String): Color {
-    val color = hex.removePrefix("#").toLong(16)
-    return Color(color or 0xFF000000L)
-}
-
-
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun InventoryScreen(
@@ -172,12 +130,6 @@ fun InventoryScreen(
         FirebaseDatabaseManager.listenToInventory(userId, listener)
     }
 
-    // -- Usage bar computation: percentage of total --
-    val total = inventoryItems.sumOf { it.quantity }
-    val percList = if (total == 0) emptyList() else
-        inventoryItems.map { it.name to (it.quantity.toFloat() / total) }
-    val shuffled = remember { colors.shuffled() }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -211,33 +163,6 @@ fun InventoryScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        // Usage bar
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .clip(RoundedCornerShape(50)),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                percList.forEachIndexed { i, (name, frac) ->
-                    Box(
-                        Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(frac)
-                            .background(hexToColor(shuffled[i % shuffled.size])),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            name,
-                            fontSize = 10.sp,
-                            fontFamily = FontFamily(Font(R.font.nunitobold)),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(2.dp)
-                        )
-                    }
-                }
-            }
 
         // Placeholder text for empty inventory list
         if (inventoryItems.isEmpty()) {
@@ -276,7 +201,7 @@ fun InventoryScreen(
         // Delete confirmation dialog to add removed items back into grocery list
         pendingDelete?.let { target ->
             AlertDialog(
-                onDismissRequest = { pendingDelete = null },
+                onDismissRequest = {},
                 title = {
                     Row(
                         Modifier.fillMaxWidth(),
@@ -287,12 +212,6 @@ fun InventoryScreen(
                             text = "Remove “${target.name}”?",
                             fontFamily = FontFamily(Font(resId = R.font.nunitobold))
                         )
-                        IconButton(onClick = { pendingDelete = null }) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Dismiss",
-                            )
-                        }
                     }
                 },
                 text = { Text("Add it to your grocery list before deleting?") },
