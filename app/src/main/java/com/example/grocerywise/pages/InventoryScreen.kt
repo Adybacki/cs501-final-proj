@@ -233,6 +233,13 @@ fun InventoryScreen(
                                 imageUrl = null,
                                 estimatedPrice = 0.0
                             )
+                            if (target.upc != null) {
+                                getPrices(target.upc) { price ->
+                                    if (price != null) {
+                                        groItem.estimatedPrice = price.toDouble()
+                                    }
+                                }
+                            }
 
                             // 3) Write bare grocery item
                             groRef.setValue(groItem).addOnCompleteListener { task ->
